@@ -316,3 +316,117 @@ test("invalid world consequences are rejected atomically without partial state c
   assert.equal(initial.events.length, 0);
   assert.equal(initial.npcs[0]?.knowledge.length, 0);
 });
+ 
+
+test("a world betrayal changes a personal relationship and unlocks a justified response", () => {
+  const mira = makeNpc({
+    id: "mira",
+    name: "미라",
+    relationships: {
+      dain: { trust: 0.8, affinity: 0.7, respect: 0.6, fear: 0 }
+    },
+    voice: { styleTags: ["blunt", "folksy"], formality: 0.2, bluntness: 0.9, warmth: 0.3 }
+  });
+  const dain = makeNpc({ id: "dain", name: "데인" });
+  const betrayal: WorldEvent = {
+    id: "event:betrayal:001",
+    tick: 50,
+    type: "betrayal",
+    summary: "데인이 미라의 가방을 훔쳐 달아나려 했다.",
+    tags: ["betrayal", "theft", "property", "trust"],
+    actorIds: ["dain"],
+    affectedNpcIds: ["mira"],
+    witnessNpcIds: [],
+    publicNoticeNpcIds: [],
+    severity: 0.95,
+    outcome: "harmful",
+    relationshipDeltas: [{
+      npcId: "mira",
+      targetNpcId: "dain",
+      trust: -0.55,
+      affinity: -0.25,
+      respect: -0.15
+    }]
+  };
+  const relationshipDialogue: DialogueEntry[] = [{
+    id: "mira-betrayal-response",
+    speakerId: "mira",
+    intent: "comment",
+    topicTags: ["betrayal"],
+    requiredEmotionLabels: ["anger"],
+    requiredRelationship: { target: "listener", trust: { max: 0.3 } },
+    variants: [{
+      id: "mira-angry",
+      requiredEmotionLabels: ["anger"],
+      preferredStyleTags: ["blunt", "forceful"],
+      text: "다신 네 말을 믿지 않아. 네가 한 짓을 기억하고 있어."
+    }]
+  }];
+  const before = selectDialogue(mira, relationshipDialogue, {
+    intent: "comment",
+    topicTags: ["betrayal"],
+    listenerId: "dain",
+    listenerName: "데인",
+    tick: 49
+  });
+  assert.equal(before, null);
+
+  const committed = commitWorldEvent({
+    tick: 49,
+    npcs: [mira, dain],
+    events: []
+  }, betrayal);
+  assert.equal(committed.ok, true);
+  if (!committed.ok) return;
+
+  const updatedMira = committed.state.npcs.find((npc) => npc.id === "mira")!;
+  const after = selectDialogue(updatedMira, relationshipDialogue, {
+    intent: "comment",
+    topicTags: ["betrayal"],
+    listenerId: "dain",
+    listenerName: "데인",
+    tick: 51
+  });
+
+  assert.equal(updatedMira.relationships.dain?.trust, 0.25);
+  assert.equal(updatedMira.emotions[0]?.label, "anger");
+  assert.equal(updatedMira.emotions[0]?.targetNpcId, "dain");
+  assert.equal(after?.text, "다신 네 말을 믿지 않아. 네가 한 짓을 기억하고 있어.");
+  assert.deepEqual(after?.justifiedByEventIds, [betrayal.id]);
+});
+
+test("an invalid relationship delta is rejected without partial world mutation", () => {
+  const mira = makeNpc({
+    id: "mira",
+    name: "미라",
+    relationships: {
+      dain: { trust: 0.9, affinity: 0.5, respect: 0.5, fear: 0 }
+    }
+  });
+  const dain = makeNpc({ id: "dain", name: "데인" });
+  const invalid: WorldEvent = {
+    id: "event:invalid-bond:001",
+    tick: 51,
+    type: "relationship_change",
+    summary: "Invalid trust adjustment",
+    tags: ["relationship"],
+    actorIds: ["mira"],
+    affectedNpcIds: ["mira"],
+    witnessNpcIds: [],
+    publicNoticeNpcIds: [],
+    severity: 0.2,
+    outcome: "neutral",
+    relationshipDeltas: [{
+      npcId: "mira",
+      targetNpcId: "dain",
+      trust: 0.2
+    }]
+  };
+  const initial = { tick: 50, npcs: [mira, dain], events: [] };
+  const result = commitWorldEvent(initial, invalid);
+  assert.equal(result.ok, false);
+  assert.equal(result.state, initial);
+  assert.equal(initial.npcs[0]?.relationships.dain?.trust, 0.9);
+  assert.equal(initial.npcs[0]?.knowledge.length, 0);
+  assert.equal(initial.events.length, 0);
+});
