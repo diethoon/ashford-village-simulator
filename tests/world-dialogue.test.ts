@@ -522,7 +522,16 @@ test("resolving a world problem clears its event-linked worry and changes later 
   const { applyVoiceProfile, INN_DIALOGUE_ENTRIES, INN_VOICE_PROFILES } =
     await import("../src/content/inn-dialogue.js");
   const getProfile = (id: string) => INN_VOICE_PROFILES.find((item) => item.npcId === id)!;
-  const mira = applyVoiceProfile(makeNpc({ id: "mira", name: "미라" }), getProfile("mira"));
+  const mira = applyVoiceProfile(makeNpc({
+    id: "mira",
+    name: "미라",
+    goals: [{
+      id: "recover_satchel",
+      tags: ["lost_property", "belongings", "travel"],
+      priority: 1,
+      status: "unresolved"
+    }]
+  }), getProfile("mira"));
   const ellen = applyVoiceProfile(makeNpc({ id: "ellen", name: "엘렌" }), getProfile("ellen"));
   const lost: WorldEvent = {
     id: "event:inn:satchel-lost:001",
@@ -536,7 +545,8 @@ test("resolving a world problem clears its event-linked worry and changes later 
     witnessNpcIds: ["ellen"],
     publicNoticeNpcIds: [],
     severity: 0.72,
-    outcome: "harmful"
+    outcome: "harmful",
+    goalDeltas: [{ npcId: "mira", goalId: "recover_satchel", status: "active" }]
   };
   const first = commitWorldEvent({ tick: 10, npcs: [mira, ellen], events: [] }, lost);
   assert.equal(first.ok, true);
