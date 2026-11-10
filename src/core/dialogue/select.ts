@@ -89,6 +89,15 @@ export function selectDialogue(
     .filter((entry) => (entry.requiredKnowledgeEventIds ?? []).every((id) =>
       npc.knowledge.some((record) => record.eventId === id)
     ))
+    .filter((entry) => {
+      const requiredEvents = entry.requiredKnowledgeEventIds ?? [];
+      const requiredChannels = entry.requiredKnowledgeChannels ?? [];
+      if (requiredChannels.length === 0) return true;
+      const relevantRecords = npc.knowledge.filter((record) =>
+        requiredEvents.length === 0 || requiredEvents.includes(record.eventId)
+      );
+      return relevantRecords.some((record) => requiredChannels.includes(record.channel));
+    })
     .filter((entry) => (entry.requiredEmotionLabels ?? []).every((label) => emotions.has(label)))
     .filter((entry) => matchesResources(npc, entry.requiredResources ?? []))
     .filter((entry) => !entry.requiredRelationship ||
