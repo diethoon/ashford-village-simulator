@@ -34,6 +34,12 @@ function emotionFor(
     return directlyAffected ? "anger" : "suspicion";
   }
 
+  if (tags.includes("lost_property") || tags.includes("belongings_loss")) {
+    if (directlyAffected) return "worry";
+    if (npc.traits.compassion >= 0.75 || npc.concerns.includes("guests")) return "worry";
+    return "curiosity";
+  }
+
   if (event.outcome === "harmful" && (tags.includes("danger") || tags.includes("fire"))) {
     const goalTags = npc.goals
       .filter((goal) => goal.priority > 0)
@@ -60,6 +66,8 @@ function deliveryFor(label: EmotionLabel): string[] {
   switch (label) {
     case "fear":
       return ["guarded", "hesitant", "urgent"];
+    case "worry":
+      return ["preoccupied", "hesitant", "concerned"];
     case "anger":
       return ["blunt", "forceful", "tense"];
     case "grief":
