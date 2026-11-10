@@ -172,6 +172,7 @@ export interface DialogueEntry {
   topicTags: string[];
   requiredKnowledgeTags?: string[];
   requiredKnowledgeEventIds?: string[];
+  requiredKnowledgeChannels?: KnowledgeChannel[];
   requiredEmotionLabels?: EmotionLabel[];
   requiredResources?: ResourceRequirement[];
   requiredRelationship?: RelationshipRequirement;
