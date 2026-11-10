@@ -258,11 +258,140 @@ function renderTimeline() {
   setText("event-count", String(timeline.length).padStart(2, "0"));
 }
 
+function renderGoalBoard() {
+  const list = $("goal-list");
+  list.innerHTML = "";
+  const statusOrder: Record<string, number> = {
+    active: 0, delegated: 1, unresolved: 2, failed: 3, abandoned: 4, completed: 5
+  };
+  const goals = state.npcs.flatMap((npc) =>
+    npc.goals.map((goal) => ({ npc, goal }))
+  ).sort((a, b) =>
+    (statusOrder[a.goal.status] ?? 9) - (statusOrder[b.goal.status] ?? 9) ||
+    b.goal.priority - a.goal.priority ||
+    a.npc.name.localeCompare(b.npc.name)
+  );
+
+  if (goals.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "empty-note";
+    empty.textContent = "아직 개인 목표가 생성되지 않았습니다. 주민이 사건을 직접 겪거나 전해 들으면 각자의 기준에 따라 목표가 생깁니다.";
+    list.append(empty);
+  }
+
+  for (const { npc, goal } of goals) {
+    const card = document.createElement("article");
+    card.className = `goal-card goal-${goal.status}`;
+    const header = document.createElement("div");
+    header.className = "goal-card-header";
+    const owner = document.createElement("strong");
+    owner.textContent = npc.name;
+    const status = document.createElement("span");
+    status.className = "goal-status";
+    status.textContent = goalStatusNames[goal.status] ?? goal.status;
+    header.append(owner, status);
+
+    const title = document.createElement("p");
+    title.className = "goal-card-title";
+    title.textContent = goal.text ?? goal.tags.join(" · ");
+
+    const priority = document.createElement("small");
+    priority.className = "goal-priority";
+    priority.textContent = `중요도 ${Math.round(goal.priority * 100)}`;
+
+    const evidence = [...npc.knowledge]
+      .filter((record) =>
+        (goal.originEventIds ?? []).includes(record.eventId) ||
+        goal.tags.some((tag) => record.tags.includes(tag))
+      )
+      .sort((a, b) => b.learnedAtTick - a.learnedAtTick)[0];
+
+    const proof = document.createElement("div");
+    proof.className = "goal-evidence";
+    if (evidence) {
+      const source = evidence.sourceNpcId
+        ? ` · 전달자 ${state.npcs.find((item) => item.id === evidence.sourceNpcId)?.name ?? evidence.sourceNpcId}`
+        : "";
+      const label = document.createElement("small");
+      label.textContent = `근거: ${channelNames[evidence.channel] ?? evidence.channel}${source} · 확신 ${Math.round(evidence.confidence * 100)}%`;
+      const summary = document.createElement("p");
+      summary.textContent = evidence.summary;
+      const meter = document.createElement("div");
+      meter.className = "confidence-track";
+      meter.setAttribute("role", "img");
+      meter.setAttribute("aria-label", `정보 확신도 ${Math.round(evidence.confidence * 100)}%`);
+      const fill = document.createElement("span");
+      fill.style.width = `${Math.round(Math.max(0, Math.min(1, evidence.confidence)) * 100)}%`;
+      meter.append(fill);
+      proof.append(label, summary, meter);
+    } else {
+      const label = document.createElement("small");
+      label.textContent = "확인 가능한 개인 정보 근거가 없습니다.";
+      proof.append(label);
+    }
+
+    const footer = document.createElement("div");
+    footer.className = "goal-card-footer";
+    footer.append(priority, proof);
+    card.append(header, title, footer);
+    list.append(card);
+  }
+
+  const activeCount = goals.filter(({ goal }) =>
+    goal.status === "active" || goal.status === "delegated"
+  ).length;
+  setText("active-goal-count", String(activeCount).padStart(2, "0"));
+  setText("known-resident-count", `${state.npcs.filter((npc) => npc.knowledge.length > 0).length}/${state.npcs.length}`);
+}
+
+let focusedNpcId: string | null = null;
+
+function renderFocus() {
+  const active = state.npcs.flatMap((npc) =>
+    npc.goals
+      .filter((goal) => (goal.status === "active" || goal.status === "delegated") && hasActionableGoal(npc))
+      .map((goal) => ({ npc, goal }))
+  ).sort((a, b) =>
+    b.goal.priority - a.goal.priority || a.npc.name.localeCompare(b.npc.name)
+  );
+  const action = $("focus-action") as HTMLButtonElement;
+  const lead = active[0];
+
+  if (!lead) {
+    focusedNpcId = null;
+    setText("focus-person", "지금은 새롭게 도움을 청하는 주민이 없습니다.");
+    setText("focus-goal", "마을은 현재 기록된 문제 없이 평온합니다.");
+    setText("focus-reason", "새 사건이 발생하거나 주민이 정보를 얻으면 이곳에 가장 중요한 변화가 먼저 표시됩니다.");
+    setText("focus-source", "개인 지식과 사건 기록을 확인합니다.");
+    action.disabled = true;
+    action.textContent = "현재 들을 요청 없음";
+    return;
+  }
+
+  focusedNpcId = lead.npc.id;
+  const evidence = [...lead.npc.knowledge]
+    .filter((record) =>
+      (lead.goal.originEventIds ?? []).includes(record.eventId) ||
+      lead.goal.tags.some((tag) => record.tags.includes(tag))
+    )
+    .sort((a, b) => b.learnedAtTick - a.learnedAtTick)[0];
+  setText("focus-person", `${lead.npc.name} · ${lead.npc.occupation}`);
+  setText("focus-goal", lead.goal.text ?? lead.goal.tags.join(" · "));
+  setText("focus-reason", evidence?.summary ?? "개인 목표에 연결된 사건 근거를 확인할 수 없습니다.");
+  setText("focus-source", evidence
+    ? `근거 경로: ${channelNames[evidence.channel] ?? evidence.channel} · 확신도 ${Math.round(evidence.confidence * 100)}% · 중요도 ${Math.round(lead.goal.priority * 100)}`
+    : `중요도 ${Math.round(lead.goal.priority * 100)} · 근거 기록 없음`);
+  action.disabled = false;
+  action.textContent = `${lead.npc.name.split(" ")[0]}의 이야기 듣기`;
+}
+
 function render() {
   setText("world-clock", `TICK ${String(state.tick).padStart(3, "0")}`);
   renderPeople();
   renderSelectedNpc();
   renderTimeline();
+  renderGoalBoard();
+  renderFocus();
 
   const lost = Boolean(lostEventId);
   const resolved = Boolean(resolvedEventId);
@@ -418,5 +547,11 @@ $("event-recovered").addEventListener("click", recoverSatchel);
 $("talk-greet").addEventListener("click", () => speak("greeting", ["inn"]));
 $("talk-event").addEventListener("click", () => speak("answer", ["lost_property", "belongings"]));
 $("talk-request").addEventListener("click", () => speak("request", ["lost_property", "belongings"]));
+$("focus-action").addEventListener("click", () => {
+  if (!focusedNpcId) return;
+  selectedNpcId = focusedNpcId;
+  render();
+  speak("request", ["lost_property", "belongings"]);
+});
 
 render();
