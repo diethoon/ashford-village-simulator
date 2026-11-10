@@ -51,6 +51,18 @@ Only user-confirmed decisions belong in the CONFIRMED section. New suggestions r
 - Affected specifications: docs/MASTER_SPEC.md, docs/DIALOGUE_SYSTEM.md, docs/WORLD_DIALOGUE_CAUSALITY.md.
 - Verification required: event-to-dialogue integration tests, knowledge provenance tests, emotional continuity tests, and current-resource dialogue tests.
 
+### ADR-009 — Mobile-first, context-first player interface
+- Date: 2026-11-11
+- Decision: The player-facing UI/UX must prioritize immediate contextual understanding, emotionally considerate feedback, visible factual provenance, modular information hierarchy, and responsive touch-first operation on small phone screens.
+- Consequence:
+  - The first view surfaces the most relevant current situation and a justified next interaction without unnecessary navigation.
+  - NPC goal and dialogue evidence must expose knowledge channel, source where available, confidence, and originating event.
+  - Bento-style modules collapse into a readable single-column mobile flow; touch controls remain comfortable and essential information never depends on hover or motion.
+  - Liquid-glass depth is restrained and subordinate to legibility, performance, and reduced-motion preferences.
+  - AI may be used for development-time design/authoring support only; runtime gameplay remains LLM-free.
+- Affected specifications: docs/MASTER_SPEC.md §13.1, docs/UI_UX_SPEC.md.
+- Verification required: responsive build review at narrow viewport sizes, touch/keyboard checks, contrast/provenance checks, and browser E2E.
+
 ## PROPOSED
 
 None recorded.
