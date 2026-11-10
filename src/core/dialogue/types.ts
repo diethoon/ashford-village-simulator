@@ -124,6 +124,7 @@ export interface WorldEvent {
   outcome: EventOutcome;
   resourceDeltas?: ResourceDelta[];
   relationshipDeltas?: RelationshipDelta[];
+  resolvesEventIds?: string[];
 }
 
 export interface SimulationSnapshot {
