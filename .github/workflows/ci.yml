@@ -25,3 +25,5 @@ jobs:
         run: npm run typecheck
       - name: Run core tests
         run: npm test
+      - name: Build browser demo
+        run: npm run build
