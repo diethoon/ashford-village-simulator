@@ -60,6 +60,23 @@ export interface RelationshipState {
   fear: number;
 }
 
+export interface RelationshipDelta {
+  npcId: string;
+  targetNpcId: string;
+  trust?: number;
+  affinity?: number;
+  respect?: number;
+  fear?: number;
+}
+
+export interface RelationshipRequirement {
+  target: "listener";
+  trust?: { min?: number; max?: number };
+  affinity?: { min?: number; max?: number };
+  respect?: { min?: number; max?: number };
+  fear?: { min?: number; max?: number };
+}
+
 export interface NpcState {
   id: string;
   name: string;
@@ -105,6 +122,7 @@ export interface WorldEvent {
   severity: number;
   outcome: EventOutcome;
   resourceDeltas?: ResourceDelta[];
+  relationshipDeltas?: RelationshipDelta[];
 }
 
 export interface SimulationSnapshot {
@@ -154,6 +172,7 @@ export interface DialogueEntry {
   requiredKnowledgeEventIds?: string[];
   requiredEmotionLabels?: EmotionLabel[];
   requiredResources?: ResourceRequirement[];
+  requiredRelationship?: RelationshipRequirement;
   variants: DialogueVariant[];
 }
 
