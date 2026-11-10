@@ -92,6 +92,20 @@ export interface NpcGoal {
   priority: number;
   status: GoalStatus;
   text?: string;
+  /** Event IDs that caused this personal goal to emerge or become relevant. */
+  originEventIds?: string[];
+}
+
+export interface NpcGoalRule {
+  id: string;
+  goalId: string;
+  triggerTags: string[];
+  goalTags: string[];
+  text: string;
+  /** Authored base importance, normalized to 0..1. */
+  priority: number;
+  minimumSeverity?: number;
+  eligibleKnowledgeChannels?: KnowledgeChannel[];
 }
 
 export interface GoalDelta {
@@ -123,6 +137,8 @@ export interface NpcState {
   };
   concerns: string[];
   goals: NpcGoal[];
+  /** Optional authored rules; goals are instantiated only after personal knowledge arrives. */
+  goalRules?: NpcGoalRule[];
   resources: Record<string, number>;
   knowledge: KnowledgeRecord[];
   emotions: EmotionState[];
