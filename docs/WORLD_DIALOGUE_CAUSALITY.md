@@ -262,3 +262,18 @@ Events that change interpersonal trust or hostility may carry explicit, validate
 - Apologies, restitution, repeated cooperation, threats and broken promises should change relationship state only through explicit world events with defined conditions.
 
 Acceptance scenario: after a betrayal, the victim remembers the event, develops an emotion directed at the responsible person, and loses trust in that person. The victim's stable voice remains recognizable. The victim uses a more guarded or accusatory response only when speaking to the responsible person and only when the betrayal is in their personal knowledge. A valid apology or restitution may later alter the relationship, but does not erase the memory automatically.
+
+
+## 14. Resolution events must change future reactions
+
+The causal link works in both directions: an unresolved problem can create worry or urgency, while a verified resolution must change what the affected NPC feels and says.
+
+- A resolution event must reference the specific earlier event(s) or active situation(s) it resolves.
+- The referenced cause must exist in canonical event history. A fabricated or unknown cause cannot be cleared.
+- Only NPCs who experience or learn about the resolution update their personal emotional state and knowledge.
+- Acute emotions caused solely by a resolved event may be removed or reduced according to the event's explicit resolution policy. Other unrelated emotions remain.
+- The causal memory remains. Relief does not mean the NPC forgets the loss, betrayal, danger, or person who helped.
+- Dialogue that depended on the unresolved state becomes ineligible when its required emotion or world predicate is no longer true. New gratitude, relief, follow-up, or repaired-relationship dialogue may become eligible.
+- A resolution event must not erase historical facts or make an NPC believe the original event never happened.
+
+Acceptance scenario: Mira loses her satchel and becomes worried. Later she receives the actual satchel back. A recorded recovery event references the lost-satchel event. Mira's event-linked worry ends, relief or joy may replace it, and the old memory remains. Her earlier worried request is no longer selectable; her later response must reflect the returned item and any resulting relationship changes.
