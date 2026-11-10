@@ -1,6 +1,6 @@
 # World ↔ Dialogue Causality Contract
 
-> Parent authority: docs/ASHFORD_SSOT.md §17  
+> Parent authority: docs/MASTER_SPEC.md §9  
 > Related design: docs/DIALOGUE_SYSTEM.md  
 > Status: Required architecture contract; detailed tuning values remain provisional  
 > Runtime constraint: zero LLM calls and zero required network calls
@@ -293,3 +293,16 @@ NPC goals are first-class simulation state, not descriptive text copied into dia
 - Failed or abandoned goals may lead to regret, blame, renewed plans, or a changed priority; they must not silently return to active.
 
 Acceptance scenario: Mira begins with an unresolved goal to recover her satchel. The loss event activates that goal and permits a contextually justified request. Returning the actual satchel completes it. Her old request becomes ineligible because the goal is completed and the worry caused by the loss is resolved. Her memory of the loss and of who helped remains.
+
+
+## 16. Goals emerge only through personal knowledge
+
+NPC-specific goal rules may instantiate or activate a goal only after the NPC has received a sufficiently credible personal knowledge record for the originating event. The rule checks event tags, permitted acquisition channels, severity, and the NPC's authored personal rule. Direct experience, observation, testimony, rumor, and public information may therefore lead to different goals or no goal at all.
+
+- An event existing in canonical history is not enough to activate a goal for an uninformed NPC.
+- Goal generation records the originating event ID and preserves the knowledge channel/confidence that justified it.
+- Existing completed, failed, and abandoned goals cannot be revived by a matching event.
+- Rule evaluation is deterministic and occurs as part of knowledge acquisition, including later testimony/rumor delivery.
+- A generated goal is not automatically a quest or a player request. Player-facing requests still require active/delegated state and valid authored dialogue conditions.
+
+Detailed rule fields, priority weighting, and current implementation boundaries are specified in `docs/GOAL_SYSTEM.md`.
