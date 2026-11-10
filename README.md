@@ -14,6 +14,8 @@ Ashford is an offline-first, LLM-free village simulation RPG. Its residents have
 4. [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) — implemented, verified, deferred, and known-gap status.
 5. [docs/WORLD_DIALOGUE_CAUSALITY.md](docs/WORLD_DIALOGUE_CAUSALITY.md) — mandatory causal relationship between world events, personal knowledge, emotion, and dialogue.
 6. [docs/DIALOGUE_SYSTEM.md](docs/DIALOGUE_SYSTEM.md) — authored dialogue, personal voices, selection, and content rules.
+7. [docs/GOAL_SYSTEM.md](docs/GOAL_SYSTEM.md) — knowledge-driven personal goal emergence and current autonomy boundaries.
+8. [docs/UI_UX_SPEC.md](docs/UI_UX_SPEC.md) — mobile-first, context-first interface and evidence presentation.
 
 ## Core principles
 
@@ -38,11 +40,11 @@ See [docs/WORLD_DIALOGUE_CAUSALITY.md](docs/WORLD_DIALOGUE_CAUSALITY.md) for req
 
 ## Current browser vertical slice
 
-The repository includes a runnable static browser demo backed by the TypeScript world-dialogue core. Select Ellen, Bram, Mira, or Dain; trigger the satchel-loss event; transmit a rumor; hear goal-backed requests; and recover the satchel to see requests disappear and gratitude dialogue become available.
+The repository includes a runnable static browser demo backed by the TypeScript world-dialogue core. Its mobile-first interface surfaces the highest-priority resident situation, goal evidence and confidence, and a direct contextual conversation action; on narrow screens the resident selector becomes a horizontal card rail. Select Ellen, Bram, Mira, or Dain; trigger the satchel-loss event; transmit a rumor; hear goal-backed requests; and recover the satchel to see requests disappear and gratitude dialogue become available.
 
-The core validates event-driven resource, relationship, and goal transitions atomically. Dialogue selection checks personal knowledge, acquisition channel, emotion, current resources, listener relationship, and goal status. The same eligibility rule controls whether the UI exposes a help-request action.
+The core validates event-driven resource, relationship, and goal transitions atomically. Personal knowledge delivery can instantiate or activate NPC-specific goals through deterministic rules; uninformed residents do not receive goals from events they have not learned about. Dialogue selection checks personal knowledge, acquisition channel, emotion, current resources, listener relationship, and goal status. The same eligibility rule controls whether the UI exposes a help-request action.
 
-Current implementation and verification limits are tracked in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).
+This is a first goal-emergence slice, not yet a complete autonomous planner: needs/utility evaluation, capability and schedule constraints, self-resolution, delegation, and multi-agent quest competition remain future work. Current implementation and verification limits are tracked in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).
 
 ## Development
 
