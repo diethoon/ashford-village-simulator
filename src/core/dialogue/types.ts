@@ -85,6 +85,12 @@ export interface NpcState {
   relationships: Record<string, RelationshipState>;
 }
 
+export interface ResourceDelta {
+  npcId: string;
+  resourceId: string;
+  delta: number;
+}
+
 export interface WorldEvent {
   id: string;
   tick: number;
@@ -98,7 +104,18 @@ export interface WorldEvent {
   publicNoticeNpcIds: string[];
   severity: number;
   outcome: EventOutcome;
+  resourceDeltas?: ResourceDelta[];
 }
+
+export interface SimulationSnapshot {
+  tick: number;
+  npcs: NpcState[];
+  events: WorldEvent[];
+}
+
+export type EventCommitResult =
+  | { ok: true; state: SimulationSnapshot }
+  | { ok: false; state: SimulationSnapshot; error: string };
 
 export type DialogueIntent =
   | "greeting"
