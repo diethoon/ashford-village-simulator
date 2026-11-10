@@ -26,6 +26,28 @@ function matchesResources(
   });
 }
 
+function matchesRelationship(
+  npc: NpcState,
+  requirement: NonNullable<DialogueEntry["requiredRelationship"]>,
+  listenerId?: string
+): boolean {
+  if (requirement.target !== "listener" || !listenerId) return false;
+  const relationship = npc.relationships[listenerId];
+  if (!relationship) return false;
+  const checks = [
+    [relationship.trust, requirement.trust],
+    [relationship.affinity, requirement.affinity],
+    [relationship.respect, requirement.respect],
+    [relationship.fear, requirement.fear]
+  ] as const;
+  return checks.every(([value, range]) =>
+    !range || (
+      (range.min === undefined || value >= range.min) &&
+      (range.max === undefined || value <= range.max)
+    )
+  );
+}
+
 function validVariant(
   variant: DialogueVariant,
   styleTags: Set<string>,
@@ -69,6 +91,8 @@ export function selectDialogue(
     ))
     .filter((entry) => (entry.requiredEmotionLabels ?? []).every((label) => emotions.has(label)))
     .filter((entry) => matchesResources(npc, entry.requiredResources ?? []))
+    .filter((entry) => !entry.requiredRelationship ||
+      matchesRelationship(npc, entry.requiredRelationship, request.listenerId))
     .map((entry) => {
       const validVariants = entry.variants
         .filter((variant) => validVariant(variant, styleTags, emotions))
