@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { observeWorldEvent, transmitEventKnowledge } from "../src/core/dialogue/awareness.js";
 import { decayEmotions } from "../src/core/dialogue/emotion.js";
 import { selectDialogue } from "../src/core/dialogue/select.js";
+import { commitWorldEvent } from "../src/core/dialogue/pipeline.js";
 import type { DialogueEntry, NpcState, WorldEvent } from "../src/core/dialogue/types.js";
 
 function makeNpc(overrides: Partial<NpcState> & Pick<NpcState, "id" | "name">): NpcState {
@@ -242,4 +243,75 @@ test("NPC voice profile remains stable when event-linked emotions change", () =>
 
   assert.deepEqual(after.voice, npc.voice);
   assert.ok(after.emotions.some((emotion) => emotion.label === "fear"));
+});
+
+
+test("a committed world change updates resources, awareness, emotion and dialogue together", () => {
+  const mira = makeNpc({
+    id: "mira",
+    name: "미라",
+    concerns: ["market", "livelihood"],
+    goals: [{ id: "keep-shop-open", tags: ["market", "livelihood", "stock"], priority: 1 }],
+    resources: { stock: 4 },
+    voice: { styleTags: ["blunt", "folksy"], formality: 0.2, bluntness: 0.9, warmth: 0.3 }
+  });
+  const rowan = makeNpc({
+    id: "rowan",
+    name: "로언",
+    concerns: ["safety"],
+    voice: { styleTags: ["measured"], formality: 0.8, bluntness: 0.2, warmth: 0.5 }
+  });
+  const tomas = makeNpc({ id: "tomas", name: "토마스" });
+  const initial = { tick: 119, npcs: [mira, rowan, tomas], events: [] };
+  const fireEvent: WorldEvent = {
+    ...marketFire,
+    resourceDeltas: [{ npcId: "mira", resourceId: "stock", delta: -4 }]
+  };
+
+  const result = commitWorldEvent(initial, fireEvent);
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+
+  const updatedMira = result.state.npcs.find((npc) => npc.id === "mira")!;
+  const updatedRowan = result.state.npcs.find((npc) => npc.id === "rowan")!;
+  const updatedTomas = result.state.npcs.find((npc) => npc.id === "tomas")!;
+
+  assert.equal(updatedMira.resources.stock, 0);
+  assert.equal(updatedMira.knowledge[0]?.channel, "direct_experience");
+  assert.equal(updatedMira.emotions[0]?.label, "fear");
+  assert.equal(updatedRowan.emotions[0]?.label, "curiosity");
+  assert.equal(updatedTomas.knowledge.length, 0);
+  assert.equal(result.state.events[0]?.id, fireEvent.id);
+
+  const comment = selectDialogue(updatedMira, dialogue, {
+    intent: "comment",
+    topicTags: ["market", "fire"],
+    tick: 121
+  });
+  const offer = selectDialogue(updatedMira, dialogue, {
+    intent: "offer",
+    topicTags: ["goods"],
+    tick: 121
+  });
+
+  assert.equal(comment?.text, "내 물건이 전부 탔어. 지금은 장사 얘기할 때가 아니야.");
+  assert.equal(offer, null);
+});
+
+test("invalid world consequences are rejected atomically without partial state changes", () => {
+  const mira = makeNpc({ id: "mira", name: "미라", resources: { stock: 2 } });
+  const initial = { tick: 119, npcs: [mira], events: [] };
+  const invalidEvent: WorldEvent = {
+    ...marketFire,
+    affectedNpcIds: ["mira"],
+    witnessNpcIds: [],
+    resourceDeltas: [{ npcId: "mira", resourceId: "stock", delta: -3 }]
+  };
+
+  const result = commitWorldEvent(initial, invalidEvent);
+  assert.equal(result.ok, false);
+  assert.equal(result.state, initial);
+  assert.equal(initial.npcs[0]?.resources.stock, 2);
+  assert.equal(initial.events.length, 0);
+  assert.equal(initial.npcs[0]?.knowledge.length, 0);
 });
