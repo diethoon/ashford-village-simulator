@@ -6,6 +6,7 @@ import type {
   WorldEvent
 } from "./types.js";
 import { applyKnownEventResponse } from "./emotion.js";
+import { evaluateGoalRulesFromKnowledge } from "./goals.js";
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -42,7 +43,8 @@ function addKnowledgeAndReact(
 ): NpcState {
   const updated = upsertKnowledge(npc, record);
   if (updated === npc) return npc;
-  return applyKnownEventResponse(updated, event, record);
+  const emotionallyUpdated = applyKnownEventResponse(updated, event, record);
+  return evaluateGoalRulesFromKnowledge(emotionallyUpdated, event, record);
 }
 
 /**
