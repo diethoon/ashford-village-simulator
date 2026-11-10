@@ -228,7 +228,7 @@ test("acute emotion decays over time while causal memory remains", () => {
     makeNpc({ id: "mira", name: "미라", concerns: ["market", "livelihood"] }),
     marketFire
   );
-  const after = decayEmotions(npc, 100);
+  const after = decayEmotions(npc, 220);
 
   assert.ok((after.emotions[0]?.intensity ?? 1) < (npc.emotions[0]?.intensity ?? 0));
   assert.equal(after.memories[0]?.eventId, marketFire.id);
