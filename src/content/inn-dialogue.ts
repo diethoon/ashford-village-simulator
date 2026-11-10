@@ -183,6 +183,7 @@ export const INN_DIALOGUE_ENTRIES: DialogueEntry[] = [
     requiredKnowledgeEventIds: ["event:inn:satchel-lost:001"],
     requiredKnowledgeChannels: ["direct_experience"],
     requiredEmotionLabels: ["worry"],
+    requiredGoals: [{ goalId: "recover_satchel", statuses: ["active", "delegated"] }],
     variants: [{
       id: "mira-worried-but-honest",
       requiredStyleTags: ["polite", "careful", "hesitant"],
