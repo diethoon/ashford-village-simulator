@@ -7,9 +7,10 @@ import { commitWorldEvent } from "../src/core/dialogue/pipeline.js";
 import type { DialogueEntry, NpcState, WorldEvent } from "../src/core/dialogue/types.js";
 
 function makeNpc(overrides: Partial<NpcState> & Pick<NpcState, "id" | "name">): NpcState {
+  const { id, name, ...rest } = overrides;
   return {
-    id: overrides.id,
-    name: overrides.name,
+    id,
+    name,
     occupation: "villager",
     traits: {
       emotionalReactivity: 0.9,
@@ -30,7 +31,7 @@ function makeNpc(overrides: Partial<NpcState> & Pick<NpcState, "id" | "name">): 
     emotions: [],
     memories: [],
     relationships: {},
-    ...overrides
+    ...rest
   };
 }
 
