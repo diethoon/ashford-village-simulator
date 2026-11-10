@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { observeWorldEvent, transmitEventKnowledge } from "../src/core/dialogue/awareness.js";
 import { decayEmotions } from "../src/core/dialogue/emotion.js";
-import { selectDialogue } from "../src/core/dialogue/select.js";
+import { hasActionableGoal, selectDialogue } from "../src/core/dialogue/select.js";
 import { commitWorldEvent } from "../src/core/dialogue/pipeline.js";
 import type { DialogueEntry, NpcState, WorldEvent } from "../src/core/dialogue/types.js";
 
@@ -787,4 +787,124 @@ test("goal updates reject unknown goals and illegal terminal transitions atomica
   assert.equal(result.state, initial);
   assert.equal(initial.npcs[0]?.goals[0]?.status, "completed");
   assert.equal(initial.events.length, 0);
+});
+
+
+test("the playable inn request appears only while Mira's personal recovery goal is active", async () => {
+  const { applyVoiceProfile, INN_DIALOGUE_ENTRIES, INN_VOICE_PROFILES } =
+    await import("../src/content/inn-dialogue.js");
+  const profile = (id: string) => INN_VOICE_PROFILES.find((item) => item.npcId === id)!;
+  const mira = applyVoiceProfile(makeNpc({
+    id: "mira",
+    name: "미라",
+    goals: [{
+      id: "recover_satchel",
+      tags: ["lost_property", "belongings", "travel"],
+      priority: 1,
+      status: "unresolved",
+      text: "잃어버린 가방을 되찾아 여행을 계속한다."
+    }]
+  }), profile("mira"));
+  const ellen = applyVoiceProfile(makeNpc({
+    id: "ellen",
+    name: "엘렌",
+    goals: [{
+      id: "help_guest",
+      tags: ["guests", "lost_property", "belongings", "inn"],
+      priority: 0.72,
+      status: "unresolved",
+      text: "여관 손님이 잃어버린 짐을 찾도록 돕는다."
+    }]
+  }), profile("ellen"));
+
+  assert.equal(hasActionableGoal(mira), false);
+  const lost: WorldEvent = {
+    id: "event:inn:satchel-lost:001",
+    tick: 11,
+    type: "lost_property",
+    summary: "미라가 창가에서 일어난 뒤 가방이 사라진 것을 알아챘다.",
+    tags: ["lost_property", "belongings", "inn", "satchel"],
+    locationId: "inn",
+    actorIds: [],
+    affectedNpcIds: ["mira"],
+    witnessNpcIds: ["ellen"],
+    publicNoticeNpcIds: [],
+    severity: 0.72,
+    outcome: "harmful",
+    goalDeltas: [
+      { npcId: "mira", goalId: "recover_satchel", status: "active" },
+      { npcId: "ellen", goalId: "help_guest", status: "active" }
+    ]
+  };
+
+  const first = commitWorldEvent({ tick: 10, npcs: [mira, ellen], events: [] }, lost);
+  assert.equal(first.ok, true);
+  if (!first.ok) return;
+
+  const activeMira = first.state.npcs.find((npc) => npc.id === "mira")!;
+  const activeEllen = first.state.npcs.find((npc) => npc.id === "ellen")!;
+  assert.equal(activeMira.goals.find((goal) => goal.id === "recover_satchel")?.status, "active");
+  assert.equal(activeEllen.goals.find((goal) => goal.id === "help_guest")?.status, "active");
+  assert.equal(hasActionableGoal(activeMira), true);
+
+  const helpRequest = selectDialogue(activeMira, INN_DIALOGUE_ENTRIES, {
+    intent: "request",
+    topicTags: ["lost_property", "belongings"],
+    tick: 12
+  });
+  assert.equal(
+    helpRequest?.text,
+    "실례지만, 제 가방을 찾는 걸 도와주실 수 있을까요? 안에 여정에 필요한 물건이 들어 있어요."
+  );
+  assert.deepEqual(helpRequest?.justifiedByEventIds, [lost.id]);
+
+  const recovered: WorldEvent = {
+    id: "event:inn:satchel-returned:001",
+    tick: 20,
+    type: "item_recovered",
+    summary: "미라가 잃어버린 가방을 돌려받았다.",
+    tags: ["belongings", "recovery", "satchel", "relief"],
+    locationId: "inn",
+    actorIds: ["mira"],
+    affectedNpcIds: ["mira"],
+    witnessNpcIds: ["ellen"],
+    publicNoticeNpcIds: [],
+    severity: 0.65,
+    outcome: "beneficial",
+    resolvesEventIds: [lost.id],
+    goalDeltas: [
+      { npcId: "mira", goalId: "recover_satchel", status: "completed" },
+      { npcId: "ellen", goalId: "help_guest", status: "completed" }
+    ]
+  };
+  const second = commitWorldEvent(first.state, recovered);
+  assert.equal(second.ok, true);
+  if (!second.ok) return;
+
+  const recoveredMira = second.state.npcs.find((npc) => npc.id === "mira")!;
+  const recoveredEllen = second.state.npcs.find((npc) => npc.id === "ellen")!;
+  assert.equal(recoveredMira.goals.find((goal) => goal.id === "recover_satchel")?.status, "completed");
+  assert.equal(recoveredEllen.goals.find((goal) => goal.id === "help_guest")?.status, "completed");
+  assert.equal(hasActionableGoal(recoveredMira), false);
+  assert.equal(selectDialogue(recoveredMira, INN_DIALOGUE_ENTRIES, {
+    intent: "request",
+    topicTags: ["lost_property", "belongings"],
+    tick: 21
+  }), null);
+
+  const gratitude = selectDialogue(recoveredMira, INN_DIALOGUE_ENTRIES, {
+    intent: "answer",
+    topicTags: ["lost_property", "belongings"],
+    tick: 21
+  });
+  const hostResponse = selectDialogue(recoveredEllen, INN_DIALOGUE_ENTRIES, {
+    intent: "answer",
+    topicTags: ["lost_property", "belongings"],
+    tick: 21
+  });
+
+  assert.match(gratitude?.text ?? "", /가방을 되찾았어요/);
+  assert.match(hostResponse?.text ?? "", /가방이 돌아와서 다행이야/);
+  assert.deepEqual(gratitude?.justifiedByEventIds, [recovered.id]);
+  assert.deepEqual(hostResponse?.justifiedByEventIds, [recovered.id]);
 });
