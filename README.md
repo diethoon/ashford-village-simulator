@@ -11,7 +11,7 @@ Ashford is an offline-first, LLM-free village simulation RPG. Its residents have
 - **Zero runtime LLM/API calls.** All game-time behavior and dialogue run locally from deterministic simulation rules and authored content.
 - **Autonomous residents.** NPCs pursue goals, make decisions, form relationships, trade, cooperate, conflict, and respond to changing circumstances.
 - **Emergent quests.** Problems and requests arise from world events and NPC limitations. NPCs can solve, abandon, or worsen them without waiting for the player.
-- **Distinct voices.** Each character has authored dialogue, a voice profile, personal knowledge, beliefs, memories, and context-sensitive reactions.
+- **World-grounded dialogue.** World events reach NPCs through observation, testimony, rumor, or public information; each person forms their own knowledge, beliefs, emotions and response. Their speech must reflect the current world and their personal experience.
 - **World-state integrity.** Dialogue and UI describe the world; only validated simulation commands change it.
 - **Reproducible simulation.** Seeded randomness and explicit state make behavior testable and save-compatible.
 - **Offline-first.** Core gameplay does not depend on network access.
@@ -31,7 +31,7 @@ Ashford does not promise infinite on-the-fly prose generation. Instead, it combi
 
 This provides substantial combinatorial variety while preserving character identity and factual consistency. NPCs can only report what they know, suspect, or have been told.
 
-## Development rules
+## World and dialogue consistency\n\nDialogue is part of the simulation's causal loop, not decorative flavor text. The world changes what residents know, need, fear, remember, request and say. The same event can produce different reactions because residents have different roles, relationships, beliefs and voices. Read [docs/WORLD_DIALOGUE_CAUSALITY.md](docs/WORLD_DIALOGUE_CAUSALITY.md) for the required contract.\n\n## Development rules
 
 1. Read docs/ASHFORD_SSOT.md before changing architecture or gameplay behavior.
 2. Treat the SSOT as authoritative. Do not silently replace user-approved requirements.
