@@ -131,7 +131,7 @@ test("one event creates personal emotional responses with different intensity", 
     id: "mira",
     name: "미라",
     concerns: ["market", "livelihood"],
-    goals: [{ id: "keep-shop-open", tags: ["market", "livelihood", "stock"], priority: 1 }],
+    goals: [{ id: "keep-shop-open", tags: ["market", "livelihood", "stock"], priority: 1, status: "active" }],
     resources: { stock: 0 },
     voice: { styleTags: ["blunt", "folksy"], formality: 0.2, bluntness: 0.9, warmth: 0.3 }
   });
@@ -157,7 +157,7 @@ test("dialogue reflects knowledge, personal loss, current emotion and stable voi
     id: "mira",
     name: "미라",
     concerns: ["market", "livelihood"],
-    goals: [{ id: "keep-shop-open", tags: ["market", "livelihood", "stock"], priority: 1 }],
+    goals: [{ id: "keep-shop-open", tags: ["market", "livelihood", "stock"], priority: 1, status: "active" }],
     resources: { stock: 0 },
     voice: { styleTags: ["blunt", "folksy"], formality: 0.2, bluntness: 0.9, warmth: 0.3 }
   });
@@ -252,7 +252,7 @@ test("a committed world change updates resources, awareness, emotion and dialogu
     id: "mira",
     name: "미라",
     concerns: ["market", "livelihood"],
-    goals: [{ id: "keep-shop-open", tags: ["market", "livelihood", "stock"], priority: 1 }],
+    goals: [{ id: "keep-shop-open", tags: ["market", "livelihood", "stock"], priority: 1, status: "active" }],
     resources: { stock: 4 },
     voice: { styleTags: ["blunt", "folksy"], formality: 0.2, bluntness: 0.9, warmth: 0.3 }
   });
@@ -642,4 +642,120 @@ test("rumor dialogue states its source and never masquerades as firsthand observ
   const testimonyBram = transmitEventKnowledge(knownEllen, unknownBram, lost, "testimony", 12, 0.7);
   const rumorOnlyLine = selectDialogue(testimonyBram, INN_DIALOGUE_ENTRIES, request);
   assert.equal(rumorOnlyLine, null);
+});
+
+
+test("world events update personal goals and goal state controls what an NPC says", () => {
+  const mira = makeNpc({
+    id: "mira",
+    name: "미라",
+    concerns: ["lost_property", "belongings"],
+    goals: [{
+      id: "recover_satchel",
+      tags: ["lost_property", "belongings"],
+      priority: 1,
+      status: "unresolved"
+    }]
+  });
+  const lost: WorldEvent = {
+    id: "event:goal:satchel-lost:001",
+    tick: 11,
+    type: "lost_property",
+    summary: "미라가 가방을 잃어버렸다.",
+    tags: ["lost_property", "belongings", "danger"],
+    actorIds: [],
+    affectedNpcIds: ["mira"],
+    witnessNpcIds: [],
+    publicNoticeNpcIds: [],
+    severity: 0.72,
+    outcome: "harmful",
+    goalDeltas: [{ npcId: "mira", goalId: "recover_satchel", status: "active" }]
+  };
+  const askForHelp: DialogueEntry[] = [{
+    id: "mira-asks-help",
+    speakerId: "mira",
+    intent: "request",
+    topicTags: ["lost_property"],
+    requiredKnowledgeEventIds: [lost.id],
+    requiredGoals: [{ goalId: "recover_satchel", statuses: ["active"] }],
+    variants: [{ id: "mira-asks-help-line", text: "제 가방을 찾는 걸 도와주실 수 있을까요?" }]
+  }];
+
+  const before = selectDialogue(mira, askForHelp, {
+    intent: "request",
+    topicTags: ["lost_property"],
+    tick: 10
+  });
+  assert.equal(before, null);
+
+  const first = commitWorldEvent({ tick: 10, npcs: [mira], events: [] }, lost);
+  assert.equal(first.ok, true);
+  if (!first.ok) return;
+  const activeMira = first.state.npcs[0]!;
+  assert.equal(activeMira.goals[0]?.status, "active");
+  const request = selectDialogue(activeMira, askForHelp, {
+    intent: "request",
+    topicTags: ["lost_property"],
+    tick: 12
+  });
+  assert.equal(request?.text, "제 가방을 찾는 걸 도와주실 수 있을까요?");
+
+  const recovered: WorldEvent = {
+    id: "event:goal:satchel-returned:001",
+    tick: 20,
+    type: "item_recovered",
+    summary: "미라가 가방을 되찾았다.",
+    tags: ["belongings", "recovery"],
+    actorIds: ["mira"],
+    affectedNpcIds: ["mira"],
+    witnessNpcIds: [],
+    publicNoticeNpcIds: [],
+    severity: 0.7,
+    outcome: "beneficial",
+    resolvesEventIds: [lost.id],
+    goalDeltas: [{ npcId: "mira", goalId: "recover_satchel", status: "completed" }]
+  };
+  const second = commitWorldEvent(first.state, recovered);
+  assert.equal(second.ok, true);
+  if (!second.ok) return;
+  const recoveredMira = second.state.npcs[0]!;
+  assert.equal(recoveredMira.goals[0]?.status, "completed");
+  assert.equal(selectDialogue(recoveredMira, askForHelp, {
+    intent: "request",
+    topicTags: ["lost_property"],
+    tick: 21
+  }), null);
+});
+
+test("goal updates reject unknown goals and illegal terminal transitions atomically", () => {
+  const mira = makeNpc({
+    id: "mira",
+    name: "미라",
+    goals: [{
+      id: "recover_satchel",
+      tags: ["lost_property"],
+      priority: 1,
+      status: "completed"
+    }]
+  });
+  const invalid: WorldEvent = {
+    id: "event:goal:invalid:001",
+    tick: 2,
+    type: "goal_change",
+    summary: "An impossible goal transition.",
+    tags: ["goal"],
+    actorIds: [],
+    affectedNpcIds: ["mira"],
+    witnessNpcIds: [],
+    publicNoticeNpcIds: [],
+    severity: 0.1,
+    outcome: "neutral",
+    goalDeltas: [{ npcId: "mira", goalId: "recover_satchel", status: "active" }]
+  };
+  const initial = { tick: 1, npcs: [mira], events: [] };
+  const result = commitWorldEvent(initial, invalid);
+  assert.equal(result.ok, false);
+  assert.equal(result.state, initial);
+  assert.equal(initial.npcs[0]?.goals[0]?.status, "completed");
+  assert.equal(initial.events.length, 0);
 });
