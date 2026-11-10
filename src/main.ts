@@ -38,17 +38,24 @@ function createNpc(seed: typeof npcSeed[number]): NpcState {
     },
     voice: { styleTags: [], formality: 0.5, bluntness: 0.5, warmth: 0.5 },
     concerns: [],
-    goals: seed.id === "mira" ? [{
-      id: "recover_satchel",
-      tags: ["lost_property", "belongings", "travel"],
+    goals: [],
+    goalRules: seed.id === "mira" ? [{
+      id: "mira-lost-property-response",
+      goalId: "recover_satchel",
+      triggerTags: ["lost_property", "belongings"],
+      goalTags: ["lost_property", "belongings", "travel"],
       priority: 1,
-      status: "unresolved",
+      minimumSeverity: 0.4,
+      eligibleKnowledgeChannels: ["direct_experience"],
       text: "잃어버린 가방을 되찾아 여행을 계속한다."
     }] : seed.id === "ellen" ? [{
-      id: "help_guest",
-      tags: ["guests", "lost_property", "belongings", "inn"],
-      priority: 0.72,
-      status: "unresolved",
+      id: "ellen-guest-care-response",
+      goalId: "help_guest",
+      triggerTags: ["lost_property", "belongings"],
+      goalTags: ["guests", "lost_property", "belongings", "inn"],
+      priority: 0.78,
+      minimumSeverity: 0.4,
+      eligibleKnowledgeChannels: ["direct_observation", "testimony"],
       text: "여관 손님이 잃어버린 짐을 찾도록 돕는다."
     }] : [],
     resources: { ...seed.resources },
@@ -337,11 +344,7 @@ function triggerLostEvent() {
     witnessNpcIds: ["ellen"],
     publicNoticeNpcIds: [],
     severity: 0.72,
-    outcome: "harmful",
-    goalDeltas: [
-      { npcId: "mira", goalId: "recover_satchel", status: "active" },
-      { npcId: "ellen", goalId: "help_guest", status: "active" }
-    ]
+    outcome: "harmful"
   };
   if (commitEvent(event)) {
     lostEventId = event.id;
