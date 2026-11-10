@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#17211e">
-  <meta name="description" content="Ashford — 세계 사건이 주민의 기억과 감정, 대화를 바꾸는 LLM-free 마을 시뮬레이션 수직 슬라이스">
+  <meta name="theme-color" content="#111b18">
+  <meta name="description" content="Ashford — 주민의 경험과 정보, 목표가 서로 다른 이야기를 만들어내는 LLM-free 마을 시뮬레이션">
   <title>Ashford: A Living World</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
@@ -15,14 +15,14 @@
         <span class="brand-mark">A</span>
         <span><strong>ASHFORD</strong><small>A LIVING WORLD</small></span>
       </a>
-      <div class="topbar-meta"><span class="live-dot"></span> LOCAL SIMULATION <span class="meta-divider">/</span> NO RUNTIME LLM</div>
+      <div class="topbar-meta"><span class="live-dot"></span> LOCAL WORLD <span class="meta-divider">/</span> NO RUNTIME AI</div>
     </header>
 
     <main>
       <section class="intro">
-        <div class="eyebrow">WORLD ↔ DIALOGUE VERTICAL SLICE</div>
-        <h1>사람은 자신이 겪고<br><em>알게 된 세계에 관해 말한다.</em></h1>
-        <p>같은 사건도 누구에게 일어났는지, 누가 목격했는지, 누구에게 전해졌는지에 따라 기억과 감정, 말투와 대화가 달라집니다.</p>
+        <div class="eyebrow">A WORLD THAT REMEMBERS</div>
+        <h1>마을은 계속 살아가고,<br><em>사람마다 다른 이야기를 기억합니다.</em></h1>
+        <p>누가 사건을 겪었는지, 무엇을 전해 들었는지, 무엇을 중요하게 여기는지에 따라 각자의 목표와 감정, 대화가 달라집니다.</p>
       </section>
 
       <section class="world-controls panel">
@@ -35,14 +35,56 @@
           <button class="secondary-button" id="event-rumor" disabled>엘렌이 브램에게 소문 전달</button>
           <button class="secondary-button" id="event-recovered" disabled>미라가 가방을 되찾음</button>
         </div>
-        <p class="control-hint" id="event-hint">사건을 발생시키면 직접 경험자와 목격자에게만 정보가 전달됩니다.</p>
+        <p class="control-hint" id="event-hint" role="status">사건을 발생시키면 직접 경험자와 목격자에게만 정보가 전달됩니다.</p>
+      </section>
+
+      <section class="bento-overview" aria-label="마을의 주요 변화">
+        <article class="focus-panel panel">
+          <div class="focus-heading">
+            <div><span class="eyebrow">RIGHT NOW · 먼저 볼 소식</span><h2>지금 주목할 주민</h2></div>
+            <span class="focus-signal">WORLD PULSE</span>
+          </div>
+          <div class="focus-content" aria-live="polite">
+            <div class="focus-copy">
+              <strong id="focus-person">지금은 새롭게 도움을 청하는 주민이 없습니다.</strong>
+              <p class="focus-goal" id="focus-goal">마을은 현재 기록된 문제 없이 평온합니다.</p>
+              <p class="focus-reason" id="focus-reason">새 사건이 발생하거나 주민이 정보를 얻으면 이곳에 가장 중요한 변화가 먼저 표시됩니다.</p>
+              <small class="focus-source" id="focus-source">개인 지식과 사건 기록을 확인합니다.</small>
+            </div>
+            <button class="primary-button focus-action" id="focus-action" disabled>현재 들을 요청 없음</button>
+          </div>
+        </article>
+
+        <div class="overview-stats">
+          <article class="stat-card panel">
+            <span class="eyebrow">ACTIVE GOALS</span>
+            <strong id="active-goal-count">00</strong>
+            <small>주민이 해결하려는 일</small>
+          </article>
+          <article class="stat-card panel">
+            <span class="eyebrow">INFORMED RESIDENTS</span>
+            <strong id="known-resident-count">0/4</strong>
+            <small>사건 정보를 얻은 사람</small>
+          </article>
+        </div>
+      </section>
+
+      <section class="goal-board panel">
+        <div class="panel-heading">
+          <div><span class="eyebrow">PERSONAL GOALS · CAUSAL EVIDENCE</span><h2>주민들의 목표와 근거</h2></div>
+          <span class="count">LIVE</span>
+        </div>
+        <p class="section-hint">목표는 미리 배정된 퀘스트 목록이 아닙니다. 각 주민이 실제로 얻은 정보와 개인 규칙이 맞아떨어질 때 생깁니다.</p>
+        <div class="goal-list" id="goal-list" aria-live="polite">
+          <p class="empty-note">아직 개인 목표가 생성되지 않았습니다.</p>
+        </div>
       </section>
 
       <div class="simulation-layout">
         <aside class="people-panel panel">
           <div class="panel-heading"><div><span class="eyebrow">RESIDENTS</span><h2>여관의 사람들</h2></div><span class="count" id="people-count">04</span></div>
-          <div id="people-list" class="people-list"></div>
-          <div class="legend"><span class="legend-dot known"></span> 알고 있는 사건 <span class="legend-dot unknown"></span> 아직 모르는 사건</div>
+          <div id="people-list" class="people-list" aria-label="주민 선택"></div>
+          <div class="legend"><span class="legend-dot known"></span> 사건 정보를 알고 있음 <span class="legend-dot unknown"></span> 아직 알지 못함</div>
         </aside>
 
         <section class="conversation-panel panel">
@@ -50,22 +92,29 @@
             <div><span class="eyebrow">PERSONAL CONTEXT</span><h2 id="selected-name">미라 펜</h2><p id="selected-role">그레이포드에서 온 여행자</p></div>
             <div class="mood-chip" id="mood-chip">평온</div>
           </div>
+
           <div class="context-grid">
             <div class="context-card"><span>현재 감정</span><strong id="emotion-state">특별한 감정 없음</strong><small id="emotion-cause">감정의 원인 사건 없음</small></div>
             <div class="context-card"><span>개인 지식</span><strong id="knowledge-count">0건</strong><small id="knowledge-source">전달받은 정보 없음</small></div>
             <div class="context-card"><span>고유 보이스</span><strong id="voice-style">정중하고 신중함</strong><small id="voice-identity">개인별 언어 습관</small></div>
             <div class="context-card"><span>현재 목표</span><strong id="goal-state">진행 중인 목표 없음</strong><small id="goal-detail">개인 목표와 세계 사건의 연결</small></div>
           </div>
+
           <div class="conversation-actions">
             <button class="talk-button" id="talk-greet">인사하기</button>
             <button class="talk-button" id="talk-event">가방 사건에 대해 묻기</button>
             <button class="talk-button" id="talk-request" disabled>도움 요청 듣기</button>
           </div>
+
           <div class="dialogue-area" aria-live="polite">
             <div class="dialogue-label"><span class="eyebrow">CONVERSATION</span><span id="dialogue-speaker">미라 펜</span></div>
-            <p id="dialogue-text" class="dialogue-text">사람을 선택하고 말을 걸어 보세요. 같은 인사에도 각자의 말투가 드러납니다.</p>
-            <div class="dialogue-trace" id="dialogue-trace">대화의 근거와 감정 원인이 이곳에 표시됩니다.</div>
+            <p id="dialogue-text" class="dialogue-text">사람을 선택하고 말을 걸어 보세요. 각자의 경험과 말투가 대화에 드러납니다.</p>
+            <details class="trace-details">
+              <summary>이 대화의 근거와 감정 원인 확인</summary>
+              <div class="dialogue-trace" id="dialogue-trace">대화의 근거와 감정 원인이 이곳에 표시됩니다.</div>
+            </details>
           </div>
+
           <div class="knowledge-panel">
             <div class="subheading"><span class="eyebrow">WHAT THIS PERSON KNOWS</span><span id="knowledge-status">개인 지식 기록</span></div>
             <div id="knowledge-list" class="knowledge-list"><span class="empty-note">아직 기록된 사건이 없습니다.</span></div>
@@ -80,7 +129,7 @@
 
       <footer class="page-footer">
         <span>ASHFORD / SYSTEM PROTOTYPE</span>
-        <span>AUTHORED DIALOGUE · LOCAL RULES · ZERO LLM CALLS</span>
+        <span>AUTHORED CONTENT · DETERMINISTIC RULES · ZERO RUNTIME LLM</span>
       </footer>
     </main>
   </div>
