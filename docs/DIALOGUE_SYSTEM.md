@@ -243,3 +243,14 @@ The trace is development metadata; the player need not see it.
 ### 14.4 Failure behavior
 
 If no line is both factually valid and contextually appropriate, choose a truthful neutral fallback or ask for clarification. Do not choose a more dramatic line that violates knowledge, current resources, relationship, or world state.
+
+
+## 15. Current goals and commitments constrain dialogue
+
+Dialogue entries may declare required NPC goal states. Selection must inspect the speaker's canonical goal list, not infer a goal from a remembered line or a quest-log label.
+
+Examples:
+- A request for help is eligible only while its underlying goal is active and not already completed, failed, or abandoned.
+- A goal delegated to another person may produce follow-up dialogue about progress, trust, or concern, but not the original unissued request.
+- When a world event completes the goal, the request disappears. A new gratitude, relief, or follow-up line can become eligible if its knowledge, memory, emotion, and relationship requirements are met.
+- A goal update must be attached to a valid world event and pass the simulation's transition rules before it influences dialogue.
