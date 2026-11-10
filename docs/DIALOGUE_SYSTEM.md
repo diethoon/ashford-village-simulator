@@ -202,3 +202,44 @@ Prioritize authored content where it matters most:
 4. Generic service interactions: shared functional content with character-specific framing.
 
 Do not attempt to write thousands of lines before the dialogue engine exists. First build the schema, validator, selector, renderer and test harness; then author content against real game contexts and measure repetition and coverage.
+
+
+## 14. World-to-dialogue causality is mandatory
+
+See docs/WORLD_DIALOGUE_CAUSALITY.md and SSOT §17. This section is normative for implementation.
+
+A dialogue response must be causally grounded in the current world and in the speaker's personal access to it. The required chain is:
+
+**World change → event → personal observation or information delivery → knowledge/belief → emotional appraisal → memory/goal/relationship consequences → dialogue context → authored utterance.**
+
+The chain is not allowed to skip personal knowledge. A world fact existing in the simulation does not mean every NPC knows it. Every line that describes an event must be backed by the speaker's memory, knowledge record, testimony, rumor, or currently valid direct perception.
+
+### 14.1 World changes must alter conversations
+
+Dialogue selection must be able to respond to changes in:
+- actual resources and ownership (an NPC cannot offer stock they no longer has);
+- health, safety, household and livelihood status;
+- current goals, urgency, obligations and unresolved problems;
+- relationship changes and remembered interactions;
+- recently learned events, evidence and corrections;
+- emotional state with a traceable cause.
+
+A resolved problem must remove or change obsolete requests. A worsening problem may make a previously casual request urgent. A repaired relationship may unlock different dialogue, but must not erase remembered harm.
+
+### 14.2 Emotion must influence delivery without erasing voice
+
+Stable personality and voice profile are kept separate from transient mood, event-linked emotion and immediate delivery. Candidate selection first validates meaning and knowledge, then chooses an authored delivery variant compatible with the character and current affect. Do not manufacture emotion by random punctuation or indiscriminate stuttering.
+
+### 14.3 Required output trace
+
+For debugging and validation, a response should be traceable to:
+- selected dialogue entry and variant IDs;
+- the NPC's knowledge/event IDs that justify its factual claims;
+- the emotion causes that influenced delivery;
+- the world-state predicates and personal resources that made the line eligible.
+
+The trace is development metadata; the player need not see it.
+
+### 14.4 Failure behavior
+
+If no line is both factually valid and contextually appropriate, choose a truthful neutral fallback or ask for clarification. Do not choose a more dramatic line that violates knowledge, current resources, relationship, or world state.
