@@ -431,3 +431,79 @@ test("an invalid relationship delta is rejected without partial world mutation",
   assert.equal(initial.npcs[0]?.knowledge.length, 0);
   assert.equal(initial.events.length, 0);
 });
+ 
+
+test("the four inn residents answer the same greeting in distinct authored voices", async () => {
+  const { applyVoiceProfile, INN_DIALOGUE_ENTRIES, INN_VOICE_PROFILES } =
+    await import("../src/content/inn-dialogue.js");
+  const ids = ["ellen", "bram", "mira", "dain"];
+  const lines = ids.map((id) => {
+    const profile = INN_VOICE_PROFILES.find((item) => item.npcId === id)!;
+    const npc = applyVoiceProfile(makeNpc({ id, name: id }), profile);
+    const line = selectDialogue(npc, INN_DIALOGUE_ENTRIES, {
+      intent: "greeting",
+      topicTags: ["inn"],
+      tick: 1
+    });
+    assert.ok(line);
+    return line!.text;
+  });
+
+  assert.equal(new Set(lines).size, 4);
+  assert.match(lines[0]!, /불가 쪽 자리/);
+  assert.match(lines[1]!, /손이 좀 뻐근/);
+  assert.match(lines[2]!, /안녕하세요/);
+  assert.match(lines[3]!, /물건을 볼 거라면/);
+});
+
+test("the inn's lost-satchel event changes only informed residents' personal dialogue", async () => {
+  const { applyVoiceProfile, INN_DIALOGUE_ENTRIES, INN_VOICE_PROFILES } =
+    await import("../src/content/inn-dialogue.js");
+  const profile = (id: string) => INN_VOICE_PROFILES.find((item) => item.npcId === id)!;
+  const mira = applyVoiceProfile(makeNpc({ id: "mira", name: "미라" }), profile("mira"));
+  const ellen = applyVoiceProfile(makeNpc({ id: "ellen", name: "엘렌" }), profile("ellen"));
+  const bram = applyVoiceProfile(makeNpc({ id: "bram", name: "브램" }), profile("bram"));
+  const event: WorldEvent = {
+    id: "event:inn:satchel-lost:001",
+    tick: 11,
+    type: "lost_property",
+    summary: "미라가 창가에서 일어난 뒤 가방이 사라진 것을 알아챘다.",
+    tags: ["lost_property", "belongings", "inn", "satchel"],
+    locationId: "inn",
+    actorIds: [],
+    affectedNpcIds: ["mira"],
+    witnessNpcIds: ["ellen"],
+    publicNoticeNpcIds: [],
+    severity: 0.72,
+    outcome: "harmful"
+  };
+  const committed = commitWorldEvent({
+    tick: 10,
+    npcs: [mira, ellen, bram],
+    events: []
+  }, event);
+  assert.equal(committed.ok, true);
+  if (!committed.ok) return;
+
+  const updatedMira = committed.state.npcs.find((npc) => npc.id === "mira")!;
+  const updatedEllen = committed.state.npcs.find((npc) => npc.id === "ellen")!;
+  const updatedBram = committed.state.npcs.find((npc) => npc.id === "bram")!;
+  const request = {
+    intent: "answer" as const,
+    topicTags: ["lost_property", "belongings"],
+    tick: 12
+  };
+  const miraLine = selectDialogue(updatedMira, INN_DIALOGUE_ENTRIES, request);
+  const ellenLine = selectDialogue(updatedEllen, INN_DIALOGUE_ENTRIES, request);
+  const bramLine = selectDialogue(updatedBram, INN_DIALOGUE_ENTRIES, request);
+
+  assert.equal(updatedMira.knowledge[0]?.channel, "direct_experience");
+  assert.equal(updatedEllen.knowledge[0]?.channel, "direct_observation");
+  assert.equal(updatedBram.knowledge.length, 0);
+  assert.equal(updatedMira.emotions[0]?.label, "worry");
+  assert.equal(updatedEllen.emotions[0]?.label, "worry");
+  assert.match(miraLine?.text ?? "", /누가 가져갔는지는 못 봤어요/);
+  assert.match(ellenLine?.text ?? "", /누가 가져가는 건 못 봤네/);
+  assert.notEqual(miraLine?.text, ellenLine?.text);
+  assert.equal(bramLine, null);
+});
