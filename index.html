@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17211e">
+  <meta name="description" content="Ashford — 세계 사건이 주민의 기억과 감정, 대화를 바꾸는 LLM-free 마을 시뮬레이션 수직 슬라이스">
+  <title>Ashford: A Living World</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Ashford home">
+        <span class="brand-mark">A</span>
+        <span><strong>ASHFORD</strong><small>A LIVING WORLD</small></span>
+      </a>
+      <div class="topbar-meta"><span class="live-dot"></span> LOCAL SIMULATION <span class="meta-divider">/</span> NO RUNTIME LLM</div>
+    </header>
+
+    <main>
+      <section class="intro">
+        <div class="eyebrow">WORLD ↔ DIALOGUE VERTICAL SLICE</div>
+        <h1>사람은 자신이 겪고<br><em>알게 된 세계에 관해 말한다.</em></h1>
+        <p>같은 사건도 누구에게 일어났는지, 누가 목격했는지, 누구에게 전해졌는지에 따라 기억과 감정, 말투와 대화가 달라집니다.</p>
+      </section>
+
+      <section class="world-controls panel">
+        <div class="panel-heading">
+          <div><span class="eyebrow">WORLD EVENTS</span><h2>여관에서 일어난 일</h2></div>
+          <span class="world-clock" id="world-clock">TICK 000</span>
+        </div>
+        <div class="event-buttons">
+          <button class="primary-button" id="event-lost">가방 분실 사건 발생</button>
+          <button class="secondary-button" id="event-rumor" disabled>엘렌이 브램에게 소문 전달</button>
+          <button class="secondary-button" id="event-recovered" disabled>미라가 가방을 되찾음</button>
+        </div>
+        <p class="control-hint" id="event-hint">사건을 발생시키면 직접 경험자와 목격자에게만 정보가 전달됩니다.</p>
+      </section>
+
+      <div class="simulation-layout">
+        <aside class="people-panel panel">
+          <div class="panel-heading"><div><span class="eyebrow">RESIDENTS</span><h2>여관의 사람들</h2></div><span class="count" id="people-count">04</span></div>
+          <div id="people-list" class="people-list"></div>
+          <div class="legend"><span class="legend-dot known"></span> 알고 있는 사건 <span class="legend-dot unknown"></span> 아직 모르는 사건</div>
+        </aside>
+
+        <section class="conversation-panel panel">
+          <div class="panel-heading conversation-heading">
+            <div><span class="eyebrow">PERSONAL CONTEXT</span><h2 id="selected-name">미라 펜</h2><p id="selected-role">그레이포드에서 온 여행자</p></div>
+            <div class="mood-chip" id="mood-chip">평온</div>
+          </div>
+          <div class="context-grid">
+            <div class="context-card"><span>현재 감정</span><strong id="emotion-state">특별한 감정 없음</strong><small id="emotion-cause">감정의 원인 사건 없음</small></div>
+            <div class="context-card"><span>개인 지식</span><strong id="knowledge-count">0건</strong><small id="knowledge-source">전달받은 정보 없음</small></div>
+            <div class="context-card"><span>고유 보이스</span><strong id="voice-style">정중하고 신중함</strong><small id="voice-identity">개인별 언어 습관</small></div>
+          </div>
+          <div class="conversation-actions">
+            <button class="talk-button" id="talk-greet">인사하기</button>
+            <button class="talk-button" id="talk-event">가방 사건에 대해 묻기</button>
+          </div>
+          <div class="dialogue-area" aria-live="polite">
+            <div class="dialogue-label"><span class="eyebrow">CONVERSATION</span><span id="dialogue-speaker">미라 펜</span></div>
+            <p id="dialogue-text" class="dialogue-text">사람을 선택하고 말을 걸어 보세요. 같은 인사에도 각자의 말투가 드러납니다.</p>
+            <div class="dialogue-trace" id="dialogue-trace">대화의 근거와 감정 원인이 이곳에 표시됩니다.</div>
+          </div>
+          <div class="knowledge-panel">
+            <div class="subheading"><span class="eyebrow">WHAT THIS PERSON KNOWS</span><span id="knowledge-status">개인 지식 기록</span></div>
+            <div id="knowledge-list" class="knowledge-list"><span class="empty-note">아직 기록된 사건이 없습니다.</span></div>
+          </div>
+        </section>
+      </div>
+
+      <section class="timeline-panel panel">
+        <div class="panel-heading"><div><span class="eyebrow">CAUSAL HISTORY</span><h2>세계 사건 기록</h2></div><span class="count" id="event-count">00</span></div>
+        <ol id="event-list" class="event-list"><li class="empty-note">아직 사건이 발생하지 않았습니다.</li></ol>
+      </section>
+
+      <footer class="page-footer">
+        <span>ASHFORD / SYSTEM PROTOTYPE</span>
+        <span>AUTHORED DIALOGUE · LOCAL RULES · ZERO LLM CALLS</span>
+      </footer>
+    </main>
+  </div>
+  <script type="module" src="/dist/app.js"></script>
+</body>
+</html>
