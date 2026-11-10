@@ -65,6 +65,21 @@ function variantScore(variant: DialogueVariant, styleTags: Set<string>): number 
   return styleScore + (variant.default ? 0.1 : 0);
 }
 
+/**
+ * A goal-backed request is actionable only while its goal is unresolved in
+ * practice and the NPC has personally acquired information about its subject.
+ * This helper drives UI affordances as well as tests; UI must not infer a
+ * request merely from the existence of a global world event.
+ */
+export function hasActionableGoal(npc: NpcState): boolean {
+  return npc.goals.some((goal) =>
+    (goal.status === "active" || goal.status === "delegated") &&
+    npc.knowledge.some((record) =>
+      goal.tags.some((tag) => record.tags.includes(tag))
+    )
+  );
+}
+
 export function selectDialogue(
   npc: NpcState,
   entries: DialogueEntry[],
