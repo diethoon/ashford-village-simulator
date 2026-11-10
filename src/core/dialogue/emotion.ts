@@ -120,7 +120,10 @@ export function applyKnownEventResponse(
 ): NpcState {
   const label = emotionFor(npc, event, knowledge);
   const intensity = calculateIntensity(npc, event, knowledge);
-  const existingIndex = npc.emotions.findIndex(
+  const unresolvedEmotions = npc.emotions.filter(
+    (emotion) => !(event.resolvesEventIds ?? []).includes(emotion.causeEventId)
+  );
+  const existingIndex = unresolvedEmotions.findIndex(
     (emotion) => emotion.label === label && emotion.causeEventId === event.id
   );
 
@@ -138,7 +141,7 @@ export function applyKnownEventResponse(
     deliveryTags: deliveryFor(label)
   };
 
-  const emotions = [...npc.emotions];
+  const emotions = [...unresolvedEmotions];
   if (existingIndex >= 0) {
     emotions[existingIndex] = {
       ...emotions[existingIndex]!,
