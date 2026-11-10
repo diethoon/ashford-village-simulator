@@ -57,5 +57,14 @@
 - User-confirmed requirement recorded as ADR-008: conversation content, delivery, and emotions must match the current world and the specific NPC's experience or knowledge.
 - Added a causal world-dialogue contract and a market-fire scenario in which the directly affected shopkeeper and an unrelated witness form different emotional reactions; a distant uninformed resident cannot speak about the event.
 - Added atomic resource delta validation so a world event cannot partially apply when a resource quantity would become invalid.
-- GitHub Actions verification: commit b886845c7f62355d62be8d83d1be2dad3e642cfe, 10 tests passed, 0 failed; TypeScript type-check passed.
+- GitHub Actions verification: commit a9d02726c6cc0b83fb855c0f8e789a6921479d6e, 12 tests passed, 0 failed; TypeScript type-check passed. The expanded suite also verifies relationship changes and target-specific emotional responses after betrayal.
 - This verifies the isolated TypeScript dialogue-core slice only. It does NOT yet verify integration with the legacy playable inn prototype, the full browser app, or a deployment.
+
+
+## Relationship-aware dialogue milestone (2026-11-11)
+
+- World events can now carry relationship deltas that are validated and applied atomically with resource changes.
+- Personal emotions linked to betrayal or theft identify the NPC target, allowing the reaction to be directed at the responsible person.
+- Dialogue entries can require relationship thresholds with the current listener, so a guarded or angry response is selected only for the relevant person and only when the speaker knows the event.
+- GitHub Actions verification: commit a9d02726c6cc0b83fb855c0f8e789a6921479d6e, type-check passed, 12 tests passed, 0 failed.
+- Still a prototype-scale ruleset; event appraisal, social propagation, dialogue authoring coverage, persistence and playable-app integration remain open work.
