@@ -596,3 +596,50 @@ test("a resolution event cannot clear a cause that is absent from world history"
   assert.equal(result.state, initial);
   assert.equal(initial.events.length, 0);
 });
+
+
+test("rumor dialogue states its source and never masquerades as firsthand observation", async () => {
+  const { applyVoiceProfile, INN_DIALOGUE_ENTRIES, INN_VOICE_PROFILES } =
+    await import("../src/content/inn-dialogue.js");
+  const profile = (id: string) => INN_VOICE_PROFILES.find((item) => item.npcId === id)!;
+  const mira = applyVoiceProfile(makeNpc({ id: "mira", name: "미라" }), profile("mira"));
+  const ellen = applyVoiceProfile(makeNpc({ id: "ellen", name: "엘렌" }), profile("ellen"));
+  const bram = applyVoiceProfile(makeNpc({ id: "bram", name: "브램" }), profile("bram"));
+  const lost: WorldEvent = {
+    id: "event:inn:satchel-lost:001",
+    tick: 11,
+    type: "lost_property",
+    summary: "미라가 창가에서 일어난 뒤 가방이 사라진 것을 알아챘다.",
+    tags: ["lost_property", "belongings", "inn", "satchel"],
+    locationId: "inn",
+    actorIds: [],
+    affectedNpcIds: ["mira"],
+    witnessNpcIds: ["ellen"],
+    publicNoticeNpcIds: [],
+    severity: 0.72,
+    outcome: "harmful"
+  };
+  const committed = commitWorldEvent({ tick: 10, npcs: [mira, ellen, bram], events: [] }, lost);
+  assert.equal(committed.ok, true);
+  if (!committed.ok) return;
+
+  const knownEllen = committed.state.npcs.find((npc) => npc.id === "ellen")!;
+  const unknownBram = committed.state.npcs.find((npc) => npc.id === "bram")!;
+  const request = {
+    intent: "answer" as const,
+    topicTags: ["lost_property", "belongings"],
+    tick: 12
+  };
+  assert.equal(selectDialogue(unknownBram, INN_DIALOGUE_ENTRIES, request), null);
+
+  const rumorBram = transmitEventKnowledge(knownEllen, unknownBram, lost, "rumor", 12, 0.7);
+  const rumorLine = selectDialogue(rumorBram, INN_DIALOGUE_ENTRIES, request);
+  assert.equal(rumorBram.knowledge[0]?.channel, "rumor");
+  assert.equal(rumorBram.knowledge[0]?.confidence, 0.7);
+  assert.match(rumorLine?.text ?? "", /엘렌에게 들었네만/);
+  assert.match(rumorLine?.text ?? "", /직접 본 일은 아니야/);
+
+  const testimonyBram = transmitEventKnowledge(knownEllen, unknownBram, lost, "testimony", 12, 0.7);
+  const rumorOnlyLine = selectDialogue(testimonyBram, INN_DIALOGUE_ENTRIES, request);
+  assert.equal(rumorOnlyLine, null);
+});
