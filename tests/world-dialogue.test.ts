@@ -572,3 +572,27 @@ test("resolving a world problem clears its event-linked worry and changes later 
   assert.ok(afterResolve.memories.some((memory) => memory.eventId === lost.id));
   assert.equal(laterLine, null);
 });
+
+
+test("a resolution event cannot clear a cause that is absent from world history", () => {
+  const mira = makeNpc({ id: "mira", name: "미라" });
+  const invalidResolution: WorldEvent = {
+    id: "event:invalid-resolution:001",
+    tick: 2,
+    type: "problem_resolved",
+    summary: "An unrecorded problem is supposedly resolved.",
+    tags: ["recovery"],
+    actorIds: ["mira"],
+    affectedNpcIds: ["mira"],
+    witnessNpcIds: [],
+    publicNoticeNpcIds: [],
+    severity: 0.4,
+    outcome: "beneficial",
+    resolvesEventIds: ["event:never-happened"]
+  };
+  const initial = { tick: 1, npcs: [mira], events: [] };
+  const result = commitWorldEvent(initial, invalidResolution);
+  assert.equal(result.ok, false);
+  assert.equal(result.state, initial);
+  assert.equal(initial.events.length, 0);
+});
