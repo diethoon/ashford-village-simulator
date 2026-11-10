@@ -590,7 +590,8 @@ test("resolving a world problem clears its event-linked worry and changes later 
   assert.equal(afterResolve.emotions.some((emotion) => emotion.causeEventId === lost.id), false);
   assert.ok(afterResolve.emotions.some((emotion) => emotion.label === "joy" && emotion.causeEventId === recovered.id));
   assert.ok(afterResolve.memories.some((memory) => memory.eventId === lost.id));
-  assert.equal(laterLine, null);
+  assert.match(laterLine?.text ?? "", /가방을 되찾았어요/);
+  assert.deepEqual(laterLine?.justifiedByEventIds, [recovered.id]);
 });
 
 
