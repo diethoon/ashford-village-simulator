@@ -277,3 +277,19 @@ The causal link works in both directions: an unresolved problem can create worry
 - A resolution event must not erase historical facts or make an NPC believe the original event never happened.
 
 Acceptance scenario: Mira loses her satchel and becomes worried. Later she receives the actual satchel back. A recorded recovery event references the lost-satchel event. Mira's event-linked worry ends, relief or joy may replace it, and the old memory remains. Her earlier worried request is no longer selectable; her later response must reflect the returned item and any resulting relationship changes.
+
+
+## 15. Goal state and commitments are part of dialogue truth
+
+NPC goals are first-class simulation state, not descriptive text copied into dialogue. A relevant event may create, activate, delegate, complete, fail, or abandon a goal. The result changes what the NPC is trying to achieve and what requests, offers, refusals, and explanations are eligible.
+
+- Each NPC goal has a stable ID, semantic tags, priority, and explicit status.
+- A world event may update a goal only when the NPC and goal IDs exist.
+- Goal transitions are validated and applied atomically with the world event. Unknown goals, conflicting updates, or illegal terminal-state transitions reject the entire event.
+- Dialogue entries may require one or more specific goal statuses.
+- An NPC may request assistance only while the relevant goal remains active and the NPC's current knowledge and circumstances justify the request.
+- Delegating a goal changes the NPC's relationship to the problem; it does not erase the underlying need or automatically mark the objective completed.
+- A completion event must reflect the real objective outcome. It can end the request while leaving the event and memory intact.
+- Failed or abandoned goals may lead to regret, blame, renewed plans, or a changed priority; they must not silently return to active.
+
+Acceptance scenario: Mira begins with an unresolved goal to recover her satchel. The loss event activates that goal and permits a contextually justified request. Returning the actual satchel completes it. Her old request becomes ineligible because the goal is completed and the worry caused by the loss is resolved. Her memory of the loss and of who helped remains.
