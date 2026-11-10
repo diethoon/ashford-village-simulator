@@ -353,6 +353,7 @@ test("a world betrayal changes a personal relationship and unlocks a justified r
     speakerId: "mira",
     intent: "comment",
     topicTags: ["betrayal"],
+    requiredKnowledgeEventIds: ["event:betrayal:001"],
     requiredEmotionLabels: ["anger"],
     requiredRelationship: { target: "listener", trust: { max: 0.3 } },
     variants: [{
