@@ -68,3 +68,13 @@
 - Dialogue entries can require relationship thresholds with the current listener, so a guarded or angry response is selected only for the relevant person and only when the speaker knows the event.
 - GitHub Actions verification: commit a9d02726c6cc0b83fb855c0f8e789a6921479d6e, type-check passed, 12 tests passed, 0 failed.
 - Still a prototype-scale ruleset; event appraisal, social propagation, dialogue authoring coverage, persistence and playable-app integration remain open work.
+
+
+## Inn character voice content milestone (2026-11-11)
+
+- Added stable voice profiles for Ellen, Bram, Mira, and Dain, each with distinct traits, concerns, speech habits, and factual boundaries.
+- Added authored greeting lines for all four residents. The same greeting intent produces four distinct character-specific utterances.
+- Added an inn lost-satchel scenario: Mira's line reflects firsthand worry; Ellen's line reflects what she witnessed and explicitly avoids claiming she saw a theft; Bram cannot discuss the event before learning about it.
+- Added a distinct `worry` emotional state for personal property loss rather than treating every adverse event as generic fear.
+- GitHub Actions verification: commit 16974c8e871860ca64c21d4113699afedd6e8fca, type-check passed, 14 tests passed, 0 failed.
+- The authored content is a testable content module, not yet connected to the prototype's browser UI.
