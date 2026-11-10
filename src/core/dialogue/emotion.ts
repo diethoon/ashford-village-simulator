@@ -116,6 +116,9 @@ export function applyKnownEventResponse(
     (emotion) => emotion.label === label && emotion.causeEventId === event.id
   );
 
+  const targetNpcId = (event.tags.includes("betrayal") || event.tags.includes("theft"))
+    ? event.actorIds.find((id) => id !== npc.id)
+    : undefined;
   const nextEmotion: EmotionState = {
     label,
     intensity,
@@ -123,6 +126,7 @@ export function applyKnownEventResponse(
     startedAtTick: knowledge.learnedAtTick,
     lastUpdatedTick: knowledge.learnedAtTick,
     decayPerTick: 0.015,
+    ...(targetNpcId ? { targetNpcId } : {}),
     deliveryTags: deliveryFor(label)
   };
 
