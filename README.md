@@ -36,16 +36,13 @@ A world event does not make every resident omniscient. The same event can cause 
 
 See [docs/WORLD_DIALOGUE_CAUSALITY.md](docs/WORLD_DIALOGUE_CAUSALITY.md) for required scenarios and acceptance criteria.
 
-## Current code slice
+## Current browser vertical slice
 
-The repository currently contains a TypeScript world-dialogue core slice:
-- event awareness and provenance;
-- event-linked emotion and memory;
-- dialogue selection by personal knowledge, emotional state, voice style, and current personal resources;
-- atomic event commit with resource validation;
-- market-fire integration test scenarios.
+The repository includes a runnable static browser demo backed by the TypeScript world-dialogue core. Select Ellen, Bram, Mira, or Dain; trigger the satchel-loss event; transmit a rumor; hear goal-backed requests; and recover the satchel to see requests disappear and gratitude dialogue become available.
 
-This slice is not yet connected to the earlier playable inn UI. Current verification status and next work are tracked in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).
+The core validates event-driven resource, relationship, and goal transitions atomically. Dialogue selection checks personal knowledge, acquisition channel, emotion, current resources, listener relationship, and goal status. The same eligibility rule controls whether the UI exposes a help-request action.
+
+Current implementation and verification limits are tracked in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).
 
 ## Development
 
