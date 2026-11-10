@@ -9,6 +9,7 @@ export type BeliefStatus = "accepted" | "uncertain" | "disputed" | "rejected";
 
 export type EmotionLabel =
   | "fear"
+  | "worry"
   | "anger"
   | "grief"
   | "relief"
