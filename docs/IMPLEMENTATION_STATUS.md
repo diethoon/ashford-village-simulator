@@ -76,5 +76,15 @@
 - Added authored greeting lines for all four residents. The same greeting intent produces four distinct character-specific utterances.
 - Added an inn lost-satchel scenario: Mira's line reflects firsthand worry; Ellen's line reflects what she witnessed and explicitly avoids claiming she saw a theft; Bram cannot discuss the event before learning about it.
 - Added a distinct `worry` emotional state for personal property loss rather than treating every adverse event as generic fear.
-- GitHub Actions verification: commit 16974c8e871860ca64c21d4113699afedd6e8fca, type-check passed, 14 tests passed, 0 failed.
+- GitHub Actions verification: commit 1d9d2844ea375604f29e742f5cc9d2a1e486d5be, type-check passed, 16 tests passed, 0 failed.
 - The authored content is a testable content module, not yet connected to the prototype's browser UI.
+
+
+## World-problem resolution milestone (2026-11-11)
+
+- World events may explicitly reference earlier event IDs they resolve.
+- A resolution reference is accepted only when the referenced event exists in canonical world history.
+- When an NPC learns of the resolution, event-linked acute emotions caused by the resolved event are removed, while the historical memory remains.
+- A lost-satchel scenario verifies that Mira's worry-driven dialogue is eligible while the loss remains unresolved, then becomes ineligible after a recorded recovery event; joy/relief can replace the old worry.
+- GitHub Actions verification: commit 1d9d2844ea375604f29e742f5cc9d2a1e486d5be, type-check passed, 16 tests passed, 0 failed.
+- This confirms the isolated core contract, not integration with the browser prototype.
