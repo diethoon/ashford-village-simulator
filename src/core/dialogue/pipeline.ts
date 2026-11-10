@@ -3,11 +3,14 @@ import type { EventCommitResult, NpcState, SimulationSnapshot, WorldEvent } from
 
 function eventReferencesExist(npcs: NpcState[], event: WorldEvent): boolean {
   const ids = new Set(npcs.map((npc) => npc.id));
-  return [
+  const eventParticipants = [
     ...event.affectedNpcIds,
     ...event.witnessNpcIds,
     ...event.publicNoticeNpcIds
-  ].every((id) => ids.has(id));
+  ];
+  const relationshipParticipants = (event.relationshipDeltas ?? [])
+    .flatMap((change) => [change.npcId, change.targetNpcId]);
+  return [...eventParticipants, ...relationshipParticipants].every((id) => ids.has(id));
 }
 
 /**
@@ -60,6 +63,59 @@ export function commitWorldEvent(
     }
   }
 
+  const relationshipTotals = new Map<string, {
+    npcId: string;
+    targetNpcId: string;
+    trust: number;
+    affinity: number;
+    respect: number;
+    fear: number;
+  }>();
+
+  for (const change of event.relationshipDeltas ?? []) {
+    const values = [change.trust, change.affinity, change.respect, change.fear]
+      .filter((value): value is number => value !== undefined);
+    if (values.some((value) => !Number.isFinite(value))) {
+      return { ok: false, state, error: "Relationship deltas must be finite numbers." };
+    }
+    const key = `${change.npcId}::${change.targetNpcId}`;
+    const existing = relationshipTotals.get(key) ?? {
+      npcId: change.npcId,
+      targetNpcId: change.targetNpcId,
+      trust: 0,
+      affinity: 0,
+      respect: 0,
+      fear: 0
+    };
+    relationshipTotals.set(key, {
+      ...existing,
+      trust: existing.trust + (change.trust ?? 0),
+      affinity: existing.affinity + (change.affinity ?? 0),
+      respect: existing.respect + (change.respect ?? 0),
+      fear: existing.fear + (change.fear ?? 0)
+    });
+  }
+
+  for (const change of relationshipTotals.values()) {
+    const npc = npcById.get(change.npcId)!;
+    const current = npc.relationships[change.targetNpcId] ?? {
+      trust: 0.5, affinity: 0.5, respect: 0.5, fear: 0
+    };
+    const next = [
+      current.trust + change.trust,
+      current.affinity + change.affinity,
+      current.respect + change.respect,
+      current.fear + change.fear
+    ];
+    if (next.some((value) => value < 0 || value > 1)) {
+      return {
+        ok: false,
+        state,
+        error: `Relationship transition would leave the valid range: ${change.npcId}/${change.targetNpcId}`
+      };
+    }
+  }
+
   const changedResources = new Map<string, NpcState>();
   for (const change of totals.values()) {
     const npc = changedResources.get(change.npcId) ?? npcById.get(change.npcId)!;
@@ -72,7 +128,31 @@ export function commitWorldEvent(
     });
   }
 
-  const committedNpcs = state.npcs.map((npc) => changedResources.get(npc.id) ?? npc);
+  const changedRelationships = new Map<string, NpcState>();
+  for (const change of relationshipTotals.values()) {
+    const npc = changedRelationships.get(change.npcId) ??
+      changedResources.get(change.npcId) ??
+      npcById.get(change.npcId)!;
+    const current = npc.relationships[change.targetNpcId] ?? {
+      trust: 0.5, affinity: 0.5, respect: 0.5, fear: 0
+    };
+    changedRelationships.set(change.npcId, {
+      ...npc,
+      relationships: {
+        ...npc.relationships,
+        [change.targetNpcId]: {
+          trust: current.trust + change.trust,
+          affinity: current.affinity + change.affinity,
+          respect: current.respect + change.respect,
+          fear: current.fear + change.fear
+        }
+      }
+    });
+  }
+
+  const committedNpcs = state.npcs.map((npc) =>
+    changedRelationships.get(npc.id) ?? changedResources.get(npc.id) ?? npc
+  );
   const eventSnapshot = { ...event, tags: [...event.tags], resourceDeltas: [...(event.resourceDeltas ?? [])] };
   const informedNpcs = committedNpcs.map((npc) => observeWorldEvent(npc, eventSnapshot));
 
