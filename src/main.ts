@@ -1,5 +1,5 @@
 import { commitWorldEvent } from "./core/dialogue/pipeline.js";
-import { selectDialogue } from "./core/dialogue/select.js";
+import { hasActionableGoal, selectDialogue } from "./core/dialogue/select.js";
 import { transmitEventKnowledge } from "./core/dialogue/awareness.js";
 import {
   applyVoiceProfile,
@@ -265,14 +265,7 @@ function render() {
   ($("event-recovered") as HTMLButtonElement).disabled = !lost || resolved;
 
   const selected = getNpc(selectedNpcId);
-  const canRequestHelp = selected.goals.some((goal) =>
-    ["active", "delegated"].includes(goal.status) &&
-    selected.knowledge.some((record) =>
-      goal.tags.some((tag) => record.tags.includes(tag)) &&
-      ["direct_experience", "direct_observation", "testimony", "rumor", "public_information"].includes(record.channel)
-    )
-  );
-  ($("talk-request") as HTMLButtonElement).disabled = !canRequestHelp;
+  ($("talk-request") as HTMLButtonElement).disabled = !hasActionableGoal(selected);
 
   if (resolved) {
     setText("event-hint", "가방은 미라에게 돌아갔습니다. 미라의 걱정은 해소됐고, 분실 사건의 기억은 남아 있습니다.");
