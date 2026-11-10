@@ -1,0 +1,15 @@
+{
+  "name": "ashford-village-simulator",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "An offline-first, LLM-free autonomous village simulation RPG.",
+  "scripts": {
+    "test": "tsx --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}
