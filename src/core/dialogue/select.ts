@@ -102,6 +102,10 @@ export function selectDialogue(
     .filter((entry) => matchesResources(npc, entry.requiredResources ?? []))
     .filter((entry) => !entry.requiredRelationship ||
       matchesRelationship(npc, entry.requiredRelationship, request.listenerId))
+    .filter((entry) => (entry.requiredGoals ?? []).every((requirement) => {
+      const goal = npc.goals.find((item) => item.id === requirement.goalId);
+      return Boolean(goal && requirement.statuses.includes(goal.status));
+    }))
     .map((entry) => {
       const validVariants = entry.variants
         .filter((variant) => validVariant(variant, styleTags, emotions))
