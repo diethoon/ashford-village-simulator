@@ -507,3 +507,68 @@ test("the inn's lost-satchel event changes only informed residents' personal dia
   assert.notEqual(miraLine?.text, ellenLine?.text);
   assert.equal(bramLine, null);
 });
+
+
+test("resolving a world problem clears its event-linked worry and changes later dialogue", async () => {
+  const { applyVoiceProfile, INN_DIALOGUE_ENTRIES, INN_VOICE_PROFILES } =
+    await import("../src/content/inn-dialogue.js");
+  const getProfile = (id: string) => INN_VOICE_PROFILES.find((item) => item.npcId === id)!;
+  const mira = applyVoiceProfile(makeNpc({ id: "mira", name: "미라" }), getProfile("mira"));
+  const ellen = applyVoiceProfile(makeNpc({ id: "ellen", name: "엘렌" }), getProfile("ellen"));
+  const lost: WorldEvent = {
+    id: "event:inn:satchel-lost:001",
+    tick: 11,
+    type: "lost_property",
+    summary: "미라가 창가에서 일어난 뒤 가방이 사라진 것을 알아챘다.",
+    tags: ["lost_property", "belongings", "inn", "satchel"],
+    locationId: "inn",
+    actorIds: [],
+    affectedNpcIds: ["mira"],
+    witnessNpcIds: ["ellen"],
+    publicNoticeNpcIds: [],
+    severity: 0.72,
+    outcome: "harmful"
+  };
+  const first = commitWorldEvent({ tick: 10, npcs: [mira, ellen], events: [] }, lost);
+  assert.equal(first.ok, true);
+  if (!first.ok) return;
+
+  const beforeResolve = first.state.npcs.find((npc) => npc.id === "mira")!;
+  const worriedLine = selectDialogue(beforeResolve, INN_DIALOGUE_ENTRIES, {
+    intent: "answer",
+    topicTags: ["lost_property", "belongings"],
+    tick: 12
+  });
+  assert.ok(worriedLine);
+
+  const recovered: WorldEvent = {
+    id: "event:inn:satchel-returned:001",
+    tick: 20,
+    type: "item_recovered",
+    summary: "미라가 잃어버린 가방을 돌려받았다.",
+    tags: ["belongings", "recovery", "satchel", "relief"],
+    locationId: "inn",
+    actorIds: ["mira"],
+    affectedNpcIds: ["mira"],
+    witnessNpcIds: ["ellen"],
+    publicNoticeNpcIds: [],
+    severity: 0.65,
+    outcome: "beneficial",
+    resolvesEventIds: [lost.id]
+  };
+  const second = commitWorldEvent(first.state, recovered);
+  assert.equal(second.ok, true);
+  if (!second.ok) return;
+
+  const afterResolve = second.state.npcs.find((npc) => npc.id === "mira")!;
+  const laterLine = selectDialogue(afterResolve, INN_DIALOGUE_ENTRIES, {
+    intent: "answer",
+    topicTags: ["lost_property", "belongings"],
+    tick: 21
+  });
+
+  assert.equal(afterResolve.emotions.some((emotion) => emotion.causeEventId === lost.id), false);
+  assert.ok(afterResolve.emotions.some((emotion) => emotion.label === "joy" && emotion.causeEventId === recovered.id));
+  assert.ok(afterResolve.memories.some((memory) => memory.eventId === lost.id));
+  assert.equal(laterLine, null);
+});
