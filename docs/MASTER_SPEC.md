@@ -204,6 +204,8 @@ Dialogue quality is not complete merely because an NPC has multiple strings. It 
 
 - docs/DIALOGUE_SYSTEM.md
 - docs/WORLD_DIALOGUE_CAUSALITY.md
+- docs/GOAL_SYSTEM.md
+- docs/UI_UX_SPEC.md
 - docs/IMPLEMENTATION_STATUS.md
 - docs/DECISION_LOG.md
 - docs/legacy/LEGACY_REGISTER.md
