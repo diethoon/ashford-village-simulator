@@ -165,6 +165,21 @@ Every quest has an origin, issuer, goal, objective graph, preconditions, funding
 
 A lightweight static web shell may be used for early vertical slices, but simulation rules must remain modular and portable. Do not mistake the temporary delivery shell for final architecture.
 
+### 13.1 Player experience and interface requirements
+
+The player-facing interface is mobile-first and context-first. The responsive target includes narrow phone viewports from 320 CSS pixels upward.
+
+- **Zero-click orientation:** the opening view surfaces the most relevant current situation, active personal goals, and a justified next interaction without requiring the player to navigate through multiple screens.
+- **Progressive disclosure:** show the decision-relevant summary first; expose provenance, emotional causes, and detailed simulation traces on demand.
+- **Emotionally considerate feedback:** microcopy and interaction feedback must acknowledge the NPC's actual circumstances. Do not use generic celebratory/error language that contradicts the world state.
+- **Trust visualization:** when a statement or recommendation depends on personal knowledge, expose its acquisition channel, source where known, confidence, and originating event. Never imply certainty greater than the underlying evidence.
+- **Bento information hierarchy:** organize complex world state into modular cards with clear priority and consistent reading order. On small screens these modules collapse into a single-column flow.
+- **Restrained depth and motion:** translucent/glass-like layers may distinguish focus and hierarchy, but text contrast, legibility, performance, and reduced-motion preferences take priority over visual effects.
+- **Touch-first operation:** primary controls use comfortable touch targets (at least 44 CSS pixels), avoid dense side-by-side controls on narrow screens, and preserve usable horizontal/vertical scrolling.
+- **Runtime boundary:** AI-assisted design and content authoring may be used during development, but these interface principles do not authorize runtime LLM calls.
+
+The UI is a projection of canonical simulation state. A visual summary, badge, meter, or suggested action must never create or alter world state by itself.
+
 ## 14. Quality definition
 
 A feature is not complete merely because a button renders. It is complete when its behavior is valid in world context, state changes through the engine, consequences are observable, persistence works, and automated regression tests cover the relevant invariants.
