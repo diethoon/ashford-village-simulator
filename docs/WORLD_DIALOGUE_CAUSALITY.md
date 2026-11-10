@@ -248,3 +248,17 @@ The contract is not implemented merely because these words exist in documentatio
 - contradictory or uninformed lines are filtered out;
 - player dialogue changes world state only through validated commands;
 - the same inputs and seed reproduce the same knowledge, emotion and dialogue results.
+
+
+## 13. Relationship consequences and person-targeted speech
+
+Events that change interpersonal trust or hostility may carry explicit, validated relationship consequences. These are applied with the same atomic world transition as resource changes; an invalid relationship delta rejects the entire transition rather than leaving a partially updated world.
+
+- A relationship record is directional: Mira's trust in Dain is not the same value as Dain's trust in Mira.
+- An event must identify the affected relationship owner and the target person.
+- Event-linked emotions such as anger, suspicion, gratitude, or resentment should retain the person or group they concern when that target is known.
+- Dialogue selection may depend on the current listener. A guarded or accusatory line aimed at Dain must not be selected when the player is speaking to Bram.
+- A relationship-dependent line also needs its factual memory/knowledge requirement. Low trust alone does not authorize a character to describe an event they never learned about.
+- Apologies, restitution, repeated cooperation, threats and broken promises should change relationship state only through explicit world events with defined conditions.
+
+Acceptance scenario: after a betrayal, the victim remembers the event, develops an emotion directed at the responsible person, and loses trust in that person. The victim's stable voice remains recognizable. The victim uses a more guarded or accusatory response only when speaking to the responsible person and only when the betrayal is in their personal knowledge. A valid apology or restitution may later alter the relationship, but does not erase the memory automatically.
