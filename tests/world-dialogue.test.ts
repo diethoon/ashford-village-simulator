@@ -858,6 +858,15 @@ test("the playable inn request appears only while Mira's personal recovery goal 
   );
   assert.deepEqual(helpRequest?.justifiedByEventIds, [lost.id]);
 
+  assert.equal(hasActionableGoal(activeEllen), true);
+  const hostRequest = selectDialogue(activeEllen, INN_DIALOGUE_ENTRIES, {
+    intent: "request",
+    topicTags: ["lost_property", "belongings"],
+    tick: 12
+  });
+  assert.match(hostRequest?.text ?? "", /여행객이 가방을 잃어버렸네/);
+  assert.deepEqual(hostRequest?.justifiedByEventIds, [lost.id]);
+
   const recovered: WorldEvent = {
     id: "event:inn:satchel-returned:001",
     tick: 20,
