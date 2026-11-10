@@ -4,7 +4,6 @@ import type { EventCommitResult, NpcState, SimulationSnapshot, WorldEvent } from
 function eventReferencesExist(npcs: NpcState[], event: WorldEvent): boolean {
   const ids = new Set(npcs.map((npc) => npc.id));
   return [
-    ...event.actorIds,
     ...event.affectedNpcIds,
     ...event.witnessNpcIds,
     ...event.publicNoticeNpcIds
