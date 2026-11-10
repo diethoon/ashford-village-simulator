@@ -918,3 +918,164 @@ test("the playable inn request appears only while Mira's personal recovery goal 
   assert.deepEqual(gratitude?.justifiedByEventIds, [recovered.id]);
   assert.deepEqual(hostResponse?.justifiedByEventIds, [recovered.id]);
 });
+
+
+test("personal knowledge instantiates NPC-specific goals without explicit goal deltas", () => {
+  const loss: WorldEvent = {
+    id: "event:inn:guest-bag-lost:auto-goals",
+    tick: 121,
+    type: "lost_property",
+    summary: "여행객의 가방이 여관에서 사라졌다.",
+    tags: ["lost_property", "belongings", "inn", "satchel"],
+    locationId: "inn",
+    actorIds: [],
+    affectedNpcIds: ["mira"],
+    witnessNpcIds: ["ellen"],
+    publicNoticeNpcIds: [],
+    severity: 0.8,
+    outcome: "harmful"
+  };
+  const mira = makeNpc({
+    id: "mira",
+    name: "미라",
+    goalRules: [{
+      id: "mira-recovery-rule",
+      goalId: "recover_satchel",
+      triggerTags: ["lost_property", "belongings"],
+      goalTags: ["lost_property", "belongings", "travel"],
+      text: "잃어버린 가방을 되찾아 여행을 계속한다.",
+      priority: 1,
+      minimumSeverity: 0.4,
+      eligibleKnowledgeChannels: ["direct_experience"]
+    }]
+  });
+  const ellen = makeNpc({
+    id: "ellen",
+    name: "엘렌",
+    goalRules: [{
+      id: "ellen-guest-care-rule",
+      goalId: "help_guest",
+      triggerTags: ["lost_property"],
+      goalTags: ["guests", "lost_property", "inn"],
+      text: "손님의 잃어物을 찾도록 돕는다.",
+      priority: 0.8,
+      minimumSeverity: 0.4,
+      eligibleKnowledgeChannels: ["direct_observation"]
+    }]
+  });
+  const bram = makeNpc({
+    id: "bram",
+    name: "브램",
+    goalRules: [{
+      id: "bram-rumor-rule",
+      goalId: "ask_about_satchel",
+      triggerTags: ["lost_property"],
+      goalTags: ["lost_property", "inn"],
+      text: "여관에서 무슨 일이 있었는지 확인한다.",
+      priority: 0.5,
+      eligibleKnowledgeChannels: ["rumor"]
+    }]
+  });
+  const uninformed = makeNpc({
+    id: "tomas",
+    name: "토마스",
+    goalRules: [{
+      id: "tomas-local-news-rule",
+      goalId: "investigate_local_news",
+      triggerTags: ["lost_property"],
+      goalTags: ["lost_property"],
+      text: "마을의 분실 사건을 확인한다.",
+      priority: 0.6
+    }]
+  });
+
+  const committed = commitWorldEvent({
+    tick: 120,
+    npcs: [mira, ellen, bram, uninformed],
+    events: []
+  }, loss);
+  assert.equal(committed.ok, true);
+  if (!committed.ok) return;
+
+  const informedMira = committed.state.npcs.find((npc) => npc.id === "mira")!;
+  const informedEllen = committed.state.npcs.find((npc) => npc.id === "ellen")!;
+  const uninformedTomas = committed.state.npcs.find((npc) => npc.id === "tomas")!;
+  assert.equal(informedMira.goals[0]?.id, "recover_satchel");
+  assert.equal(informedMira.goals[0]?.status, "active");
+  assert.deepEqual(informedMira.goals[0]?.originEventIds, [loss.id]);
+  assert.equal(informedEllen.goals[0]?.id, "help_guest");
+  assert.equal(informedEllen.goals[0]?.status, "active");
+  assert.equal(informedEllen.knowledge[0]?.channel, "direct_observation");
+  assert.equal(uninformedTomas.knowledge.length, 0);
+  assert.equal(uninformedTomas.goals.length, 0);
+  assert.equal(hasActionableGoal(informedMira), true);
+  assert.equal(hasActionableGoal(informedEllen), true);
+
+  const informedBram = transmitEventKnowledge(
+    informedEllen, bram, loss, "rumor", 122, 0.7
+  );
+  assert.equal(informedBram.knowledge[0]?.channel, "rumor");
+  assert.equal(informedBram.goals[0]?.id, "ask_about_satchel");
+  assert.equal(informedBram.goals[0]?.status, "active");
+  assert.deepEqual(informedBram.goals[0]?.originEventIds, [loss.id]);
+  assert.ok((informedBram.goals[0]?.priority ?? 1) < (informedMira.goals[0]?.priority ?? 0));
+});
+
+test("goal rules respect knowledge confidence, channel restrictions, and terminal states", () => {
+  const loss: WorldEvent = {
+    id: "event:inn:low-confidence-loss",
+    tick: 2,
+    type: "lost_property",
+    summary: "가방이 사라졌다는 이야기가 돌고 있다.",
+    tags: ["lost_property", "belongings"],
+    actorIds: [],
+    affectedNpcIds: ["source"],
+    witnessNpcIds: [],
+    publicNoticeNpcIds: [],
+    severity: 0.9,
+    outcome: "harmful"
+  };
+  const source = observeWorldEvent(
+    makeNpc({ id: "source", name: "제보자" }),
+    loss
+  );
+  const listener = makeNpc({
+    id: "listener",
+    name: "청자",
+    goalRules: [{
+      id: "direct-only-rule",
+      goalId: "recover_personal_bag",
+      triggerTags: ["lost_property"],
+      goalTags: ["lost_property"],
+      text: "내 가방을 되찾는다.",
+      priority: 1,
+      eligibleKnowledgeChannels: ["direct_experience"]
+    }]
+  });
+  const rumor = transmitEventKnowledge(source, listener, loss, "rumor", 3, 0.2);
+  assert.equal(rumor.knowledge[0]?.confidence, 0.2);
+  assert.equal(rumor.goals.length, 0);
+
+  const completedOwner = makeNpc({
+    id: "completed",
+    name: "목표 달성자",
+    goals: [{
+      id: "recover_personal_bag",
+      tags: ["lost_property"],
+      priority: 1,
+      status: "completed"
+    }],
+    goalRules: [{
+      id: "no-revival-rule",
+      goalId: "recover_personal_bag",
+      triggerTags: ["lost_property"],
+      goalTags: ["lost_property"],
+      text: "이미 끝난 목표",
+      priority: 1
+    }]
+  });
+  const newLoss = { ...loss, id: "event:inn:new-loss", tick: 4, affectedNpcIds: ["completed"] };
+  const observed = observeWorldEvent(completedOwner, newLoss);
+  assert.equal(observed.goals[0]?.status, "completed");
+  assert.deepEqual(observed.goals[0]?.originEventIds, undefined);
+});
