@@ -28,6 +28,15 @@ export function commitWorldEvent(
   if (state.events.some((existing) => existing.id === event.id)) {
     return { ok: false, state, error: `Duplicate event id: ${event.id}` };
   }
+  const unknownResolvedEvents = (event.resolvesEventIds ?? [])
+    .filter((resolvedId) => !state.events.some((existing) => existing.id === resolvedId));
+  if (unknownResolvedEvents.length > 0) {
+    return {
+      ok: false,
+      state,
+      error: `Cannot resolve unknown event(s): ${unknownResolvedEvents.join(", ")}`
+    };
+  }
   if (!eventReferencesExist(state.npcs, event)) {
     return { ok: false, state, error: "Event references an unknown NPC." };
   }
