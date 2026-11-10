@@ -38,7 +38,13 @@ function createNpc(seed: typeof npcSeed[number]): NpcState {
     },
     voice: { styleTags: [], formality: 0.5, bluntness: 0.5, warmth: 0.5 },
     concerns: [],
-    goals: [],
+    goals: seed.id === "mira" ? [{
+      id: "recover_satchel",
+      tags: ["lost_property", "belongings", "travel"],
+      priority: 1,
+      status: "unresolved",
+      text: "잃어버린 가방을 되찾아 여행을 계속한다."
+    }] : [],
     resources: { ...seed.resources },
     knowledge: [],
     emotions: [],
@@ -298,7 +304,8 @@ function triggerLostEvent() {
     witnessNpcIds: ["ellen"],
     publicNoticeNpcIds: [],
     severity: 0.72,
-    outcome: "harmful"
+    outcome: "harmful",
+    goalDeltas: [{ npcId: "mira", goalId: "recover_satchel", status: "active" }]
   };
   if (commitEvent(event)) {
     lostEventId = event.id;
@@ -348,7 +355,8 @@ function recoverSatchel() {
     publicNoticeNpcIds: [],
     severity: 0.65,
     outcome: "beneficial",
-    resolvesEventIds: [lostEventId]
+    resolvesEventIds: [lostEventId],
+    goalDeltas: [{ npcId: "mira", goalId: "recover_satchel", status: "completed" }]
   };
   if (commitEvent(event)) {
     resolvedEventId = event.id;
