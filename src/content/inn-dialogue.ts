@@ -181,6 +181,7 @@ export const INN_DIALOGUE_ENTRIES: DialogueEntry[] = [
     intent: "answer",
     topicTags: ["lost_property", "belongings"],
     requiredKnowledgeEventIds: ["event:inn:satchel-lost:001"],
+    requiredKnowledgeChannels: ["direct_experience"],
     requiredEmotionLabels: ["worry"],
     variants: [{
       id: "mira-worried-but-honest",
@@ -194,11 +195,25 @@ export const INN_DIALOGUE_ENTRIES: DialogueEntry[] = [
     intent: "answer",
     topicTags: ["lost_property", "belongings"],
     requiredKnowledgeEventIds: ["event:inn:satchel-lost:001"],
+    requiredKnowledgeChannels: ["direct_observation"],
     requiredEmotionLabels: ["worry"],
     variants: [{
       id: "ellen-witness-account",
       preferredStyleTags: ["observant", "practical"],
       text: "미라가 자리에서 일어나더니 빈 허리끈을 만지작거리더군. 가방이 사라진 걸 알아챈 모양이야. 누가 가져가는 건 못 봤네."
+    }]
+  },
+  {
+    id: "bram-satchel-rumor",
+    speakerId: "bram",
+    intent: "answer",
+    topicTags: ["lost_property", "belongings"],
+    requiredKnowledgeEventIds: ["event:inn:satchel-lost:001"],
+    requiredKnowledgeChannels: ["rumor"],
+    variants: [{
+      id: "bram-rumor-not-witnessed",
+      preferredStyleTags: ["plainspoken", "quiet"],
+      text: "엘렌에게 들었네만, 내가 직접 본 일은 아니야. 누가 가져갔는지는 모르지."
     }]
   },
   {
