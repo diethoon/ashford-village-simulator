@@ -236,6 +236,21 @@ export const INN_DIALOGUE_ENTRIES: DialogueEntry[] = [
     }]
   },
   {
+    id: "ellen-satchel-help-request",
+    speakerId: "ellen",
+    intent: "request",
+    topicTags: ["lost_property", "belongings"],
+    requiredKnowledgeEventIds: ["event:inn:satchel-lost:001"],
+    requiredKnowledgeChannels: ["direct_observation"],
+    requiredEmotionLabels: ["worry"],
+    requiredGoals: [{ goalId: "help_guest", statuses: ["active", "delegated"] }],
+    variants: [{
+      id: "ellen-host-asks-for-help",
+      preferredStyleTags: ["practical", "warm", "observant"],
+      text: "여행객이 가방을 잃어버렸네. 내가 여관 안을 살피는 동안 혹시 마당과 길목을 확인해 주겠나?"
+    }]
+  },
+  {
     id: "ellen-satchel-observation",
     speakerId: "ellen",
     intent: "answer",
