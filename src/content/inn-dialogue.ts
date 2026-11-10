@@ -191,6 +191,51 @@ export const INN_DIALOGUE_ENTRIES: DialogueEntry[] = [
     }]
   },
   {
+    id: "mira-satchel-help-request",
+    speakerId: "mira",
+    intent: "request",
+    topicTags: ["lost_property", "belongings"],
+    requiredKnowledgeEventIds: ["event:inn:satchel-lost:001"],
+    requiredKnowledgeChannels: ["direct_experience"],
+    requiredEmotionLabels: ["worry"],
+    requiredGoals: [{ goalId: "recover_satchel", statuses: ["active", "delegated"] }],
+    variants: [{
+      id: "mira-careful-help-request",
+      requiredStyleTags: ["polite", "careful", "hesitant"],
+      text: "실례지만, 제 가방을 찾는 걸 도와주실 수 있을까요? 안에 여정에 필요한 물건이 들어 있어요."
+    }]
+  },
+  {
+    id: "mira-satchel-recovered",
+    speakerId: "mira",
+    intent: "answer",
+    topicTags: ["lost_property", "belongings"],
+    requiredKnowledgeEventIds: ["event:inn:satchel-returned:001"],
+    requiredKnowledgeChannels: ["direct_experience"],
+    requiredEmotionLabels: ["joy"],
+    requiredGoals: [{ goalId: "recover_satchel", statuses: ["completed"] }],
+    variants: [{
+      id: "mira-grateful-after-recovery",
+      requiredStyleTags: ["polite", "warm", "earnest"],
+      text: "가방을 되찾았어요. 이제 안심하고 다시 길을 떠날 수 있겠네요. 걱정해 주셔서 정말 고마워요."
+    }]
+  },
+  {
+    id: "ellen-satchel-resolved",
+    speakerId: "ellen",
+    intent: "answer",
+    topicTags: ["lost_property", "belongings"],
+    requiredKnowledgeEventIds: ["event:inn:satchel-returned:001"],
+    requiredKnowledgeChannels: ["direct_observation"],
+    requiredEmotionLabels: ["relief"],
+    requiredGoals: [{ goalId: "help_guest", statuses: ["completed"] }],
+    variants: [{
+      id: "ellen-relieved-host",
+      preferredStyleTags: ["observant", "practical", "warm"],
+      text: "가방이 돌아와서 다행이야. 여관에서 손님 짐까지 잃어버린 채로 보낼 순 없지."
+    }]
+  },
+  {
     id: "ellen-satchel-observation",
     speakerId: "ellen",
     intent: "answer",
