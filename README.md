@@ -6,44 +6,55 @@ Ashford is an offline-first, LLM-free village simulation RPG. Its residents have
 
 > **Design principle:** We do not build a game that manufactures quests. We build a world in which quests naturally emerge.
 
+## Start here
+
+1. [AGENTS.md](AGENTS.md) — mandatory repository engineering directive.
+2. [docs/MASTER_SPEC.md](docs/MASTER_SPEC.md) — canonical project specification and single source of truth.
+3. [docs/DECISION_LOG.md](docs/DECISION_LOG.md) — user-confirmed decisions and change history.
+4. [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) — implemented, verified, deferred, and known-gap status.
+5. [docs/WORLD_DIALOGUE_CAUSALITY.md](docs/WORLD_DIALOGUE_CAUSALITY.md) — mandatory causal relationship between world events, personal knowledge, emotion, and dialogue.
+6. [docs/DIALOGUE_SYSTEM.md](docs/DIALOGUE_SYSTEM.md) — authored dialogue, personal voices, selection, and content rules.
+
 ## Core principles
 
-- **Zero runtime LLM/API calls.** All game-time behavior and dialogue run locally from deterministic simulation rules and authored content.
-- **Autonomous residents.** NPCs pursue goals, make decisions, form relationships, trade, cooperate, conflict, and respond to changing circumstances.
+- **Zero runtime LLM/API calls.** All game-time behavior and dialogue run locally from authored content and deterministic rules.
+- **Autonomous residents.** NPCs pursue goals, form relationships, trade, cooperate, conflict, and respond to changing circumstances.
 - **Emergent quests.** Problems and requests arise from world events and NPC limitations. NPCs can solve, abandon, or worsen them without waiting for the player.
-- **World-grounded dialogue.** World events reach NPCs through observation, testimony, rumor, or public information; each person forms their own knowledge, beliefs, emotions and response. Their speech must reflect the current world and their personal experience.
+- **World-grounded dialogue.** A character's words, emotions, tone, requests, and conversational options must agree with the actual world and with what that individual knows or has experienced.
+- **Distinct voices.** Each character has authored dialogue, a stable voice identity, personal knowledge, beliefs, memories, and context-sensitive emotional delivery.
 - **World-state integrity.** Dialogue and UI describe the world; only validated simulation commands change it.
 - **Reproducible simulation.** Seeded randomness and explicit state make behavior testable and save-compatible.
 - **Offline-first.** Core gameplay does not depend on network access.
 
-## Project status
+## World and dialogue consistency
 
-The repository is at its initial specification stage. The authoritative requirements are in docs/ASHFORD_SSOT.md. No gameplay implementation should be considered complete until it exists in the repository and passes its tests.
+Dialogue is part of the simulation's causal loop, not decorative flavor text:
 
-## Dialogue without a runtime LLM
+**World change → event → personal observation/information → knowledge and belief → emotional appraisal → memory/goals/relationships → dialogue.**
 
-Ashford does not promise infinite on-the-fly prose generation. Instead, it combines:
-- individually authored lines for important characters and story moments;
-- character-specific dialogue sets and voice profiles;
-- context, relationship, mood, memory, and knowledge filters;
-- validated sentence templates and semantic slots;
-- repetition control and honest fallback responses.
+A world event does not make every resident omniscient. The same event can cause fear in one person, curiosity in another, anger or relief in someone else, depending on their role, circumstances, relationships, goals, and information source. Their stable personality and voice remain recognizable as emotions change.
 
-This provides substantial combinatorial variety while preserving character identity and factual consistency. NPCs can only report what they know, suspect, or have been told.
+See [docs/WORLD_DIALOGUE_CAUSALITY.md](docs/WORLD_DIALOGUE_CAUSALITY.md) for required scenarios and acceptance criteria.
 
-## World and dialogue consistency\n\nDialogue is part of the simulation's causal loop, not decorative flavor text. The world changes what residents know, need, fear, remember, request and say. The same event can produce different reactions because residents have different roles, relationships, beliefs and voices. Read [docs/WORLD_DIALOGUE_CAUSALITY.md](docs/WORLD_DIALOGUE_CAUSALITY.md) for the required contract.\n\n## Development rules
+## Current code slice
 
-1. Read docs/ASHFORD_SSOT.md before changing architecture or gameplay behavior.
-2. Treat the SSOT as authoritative. Do not silently replace user-approved requirements.
-3. Record proposed changes and their impact before changing established requirements.
-4. Keep the simulation core independent from the UI.
-5. Never add a runtime LLM dependency or hidden network call.
-6. Test state transitions, deterministic behavior, persistence, and long-running simulation.
+The repository currently contains a TypeScript world-dialogue core slice:
+- event awareness and provenance;
+- event-linked emotion and memory;
+- dialogue selection by personal knowledge, emotional state, voice style, and current personal resources;
+- atomic event commit with resource validation;
+- market-fire integration test scenarios.
 
-## Repository structure
+This slice is not yet connected to the earlier playable inn UI. Current verification status and next work are tracked in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).
 
-The structure will be introduced incrementally as each subsystem is implemented and tested. Proposed architecture and unapproved technical choices must remain clearly labeled as proposals.
+## Development
 
-## License
+Install dependencies and run:
 
-No license has been selected yet. All rights reserved by default until the project owner chooses and adds a license.
+```sh
+npm install
+npm run typecheck
+npm test
+```
+
+The game runtime must never call an LLM API. The core must remain independently testable from the UI.
