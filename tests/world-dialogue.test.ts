@@ -144,7 +144,8 @@ test("one event creates personal emotional responses with different intensity", 
   const rowanAfter = observeWorldEvent(passerby, marketFire);
 
   assert.equal(miraAfter.emotions[0]?.label, "fear");
-  assert.equal(rowanAfter.emotions[0]?.label, "fear");
+  assert.equal(rowanAfter.emotions[0]?.label, "curiosity");
+  assert.notEqual(miraAfter.emotions[0]?.label, rowanAfter.emotions[0]?.label);
   assert.ok((miraAfter.emotions[0]?.intensity ?? 0) > (rowanAfter.emotions[0]?.intensity ?? 0));
   assert.equal(miraAfter.memories[0]?.eventId, marketFire.id);
 });
