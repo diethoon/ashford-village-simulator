@@ -460,7 +460,16 @@ test("the inn's lost-satchel event changes only informed residents' personal dia
   const { applyVoiceProfile, INN_DIALOGUE_ENTRIES, INN_VOICE_PROFILES } =
     await import("../src/content/inn-dialogue.js");
   const profile = (id: string) => INN_VOICE_PROFILES.find((item) => item.npcId === id)!;
-  const mira = applyVoiceProfile(makeNpc({ id: "mira", name: "미라" }), profile("mira"));
+  const mira = applyVoiceProfile(makeNpc({
+    id: "mira",
+    name: "미라",
+    goals: [{
+      id: "recover_satchel",
+      tags: ["lost_property", "belongings", "travel"],
+      priority: 1,
+      status: "active"
+    }]
+  }), profile("mira"));
   const ellen = applyVoiceProfile(makeNpc({ id: "ellen", name: "엘렌" }), profile("ellen"));
   const bram = applyVoiceProfile(makeNpc({ id: "bram", name: "브램" }), profile("bram"));
   const event: WorldEvent = {
@@ -554,7 +563,8 @@ test("resolving a world problem clears its event-linked worry and changes later 
     publicNoticeNpcIds: [],
     severity: 0.65,
     outcome: "beneficial",
-    resolvesEventIds: [lost.id]
+    resolvesEventIds: [lost.id],
+    goalDeltas: [{ npcId: "mira", goalId: "recover_satchel", status: "completed" }]
   };
   const second = commitWorldEvent(first.state, recovered);
   assert.equal(second.ok, true);
@@ -602,7 +612,16 @@ test("rumor dialogue states its source and never masquerades as firsthand observ
   const { applyVoiceProfile, INN_DIALOGUE_ENTRIES, INN_VOICE_PROFILES } =
     await import("../src/content/inn-dialogue.js");
   const profile = (id: string) => INN_VOICE_PROFILES.find((item) => item.npcId === id)!;
-  const mira = applyVoiceProfile(makeNpc({ id: "mira", name: "미라" }), profile("mira"));
+  const mira = applyVoiceProfile(makeNpc({
+    id: "mira",
+    name: "미라",
+    goals: [{
+      id: "recover_satchel",
+      tags: ["lost_property", "belongings", "travel"],
+      priority: 1,
+      status: "active"
+    }]
+  }), profile("mira"));
   const ellen = applyVoiceProfile(makeNpc({ id: "ellen", name: "엘렌" }), profile("ellen"));
   const bram = applyVoiceProfile(makeNpc({ id: "bram", name: "브램" }), profile("bram"));
   const lost: WorldEvent = {
