@@ -78,6 +78,33 @@ export interface RelationshipRequirement {
   fear?: { min?: number; max?: number };
 }
 
+export type GoalStatus =
+  | "unresolved"
+  | "active"
+  | "delegated"
+  | "completed"
+  | "failed"
+  | "abandoned";
+
+export interface NpcGoal {
+  id: string;
+  tags: string[];
+  priority: number;
+  status: GoalStatus;
+  text?: string;
+}
+
+export interface GoalDelta {
+  npcId: string;
+  goalId: string;
+  status: GoalStatus;
+}
+
+export interface GoalRequirement {
+  goalId: string;
+  statuses: GoalStatus[];
+}
+
 export interface NpcState {
   id: string;
   name: string;
@@ -95,7 +122,7 @@ export interface NpcState {
     warmth: number;
   };
   concerns: string[];
-  goals: Array<{ id: string; tags: string[]; priority: number }>;
+  goals: NpcGoal[];
   resources: Record<string, number>;
   knowledge: KnowledgeRecord[];
   emotions: EmotionState[];
@@ -124,6 +151,7 @@ export interface WorldEvent {
   outcome: EventOutcome;
   resourceDeltas?: ResourceDelta[];
   relationshipDeltas?: RelationshipDelta[];
+  goalDeltas?: GoalDelta[];
   resolvesEventIds?: string[];
 }
 
@@ -176,6 +204,7 @@ export interface DialogueEntry {
   requiredEmotionLabels?: EmotionLabel[];
   requiredResources?: ResourceRequirement[];
   requiredRelationship?: RelationshipRequirement;
+  requiredGoals?: GoalRequirement[];
   variants: DialogueVariant[];
 }
 
