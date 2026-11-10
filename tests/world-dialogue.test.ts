@@ -957,7 +957,7 @@ test("personal knowledge instantiates NPC-specific goals without explicit goal d
       goalId: "help_guest",
       triggerTags: ["lost_property"],
       goalTags: ["guests", "lost_property", "inn"],
-      text: "손님의 잃어物을 찾도록 돕는다.",
+      text: "손님의 잃어버린 짐을 찾도록 돕는다.",
       priority: 0.8,
       minimumSeverity: 0.4,
       eligibleKnowledgeChannels: ["direct_observation"]
