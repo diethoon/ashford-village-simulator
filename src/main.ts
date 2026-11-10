@@ -44,6 +44,12 @@ function createNpc(seed: typeof npcSeed[number]): NpcState {
       priority: 1,
       status: "unresolved",
       text: "잃어버린 가방을 되찾아 여행을 계속한다."
+    }] : seed.id === "ellen" ? [{
+      id: "help_guest",
+      tags: ["guests", "lost_property", "belongings", "inn"],
+      priority: 0.72,
+      status: "unresolved",
+      text: "여관 손님이 잃어버린 짐을 찾도록 돕는다."
     }] : [],
     resources: { ...seed.resources },
     knowledge: [],
@@ -258,6 +264,16 @@ function render() {
   ($("event-rumor") as HTMLButtonElement).disabled = !lost || bramKnows || resolved;
   ($("event-recovered") as HTMLButtonElement).disabled = !lost || resolved;
 
+  const selected = getNpc(selectedNpcId);
+  const canRequestHelp = selected.goals.some((goal) =>
+    ["active", "delegated"].includes(goal.status) &&
+    selected.knowledge.some((record) =>
+      goal.tags.some((tag) => record.tags.includes(tag)) &&
+      ["direct_experience", "direct_observation", "testimony", "rumor", "public_information"].includes(record.channel)
+    )
+  );
+  ($("talk-request") as HTMLButtonElement).disabled = !canRequestHelp;
+
   if (resolved) {
     setText("event-hint", "가방은 미라에게 돌아갔습니다. 미라의 걱정은 해소됐고, 분실 사건의 기억은 남아 있습니다.");
   } else if (bramKnows) {
@@ -290,12 +306,19 @@ function speak(intent: DialogueRequest["intent"], topicTags: string[]) {
     currentSpeaker = npc.name;
   } else if (topicTags.includes("lost_property")) {
     const record = npc.knowledge.find((item) => item.eventId === lostEventId);
-    currentDialogue = record
-      ? "그 일에 관해서는 아직 적절히 답할 말이 없네."
-      : "그런 일이 있었나? 나는 그 사건에 관해 들은 게 없네.";
-    currentTrace = record
-      ? `사건은 알고 있지만 현재 조건에 맞는 발화가 없음 · 정보 경로: ${channelNames[record.channel]}`
-      : "개인 지식에 사건 기록 없음 · 대화 엔진이 미인지 사건에 관한 발화를 차단함";
+    const completedGoal = npc.goals.some((goal) =>
+      goal.id === "recover_satchel" && goal.status === "completed"
+    );
+    currentDialogue = completedGoal
+      ? "가방은 이미 되찾았어요. 이제 찾는 일을 부탁할 필요는 없지만, 걱정해 줘서 고마워요."
+      : record
+        ? "그 일에 관해서는 아직 적절히 답할 말이 없네."
+        : "그런 일이 있었나? 나는 그 사건에 관해 들은 게 없네.";
+    currentTrace = completedGoal
+      ? "목표 recover_satchel = completed · 현재 도움 요청 대사 비활성"
+      : record
+        ? `사건은 알고 있지만 현재 조건에 맞는 발화가 없음 · 정보 경로: ${channelNames[record.channel]}`
+        : "개인 지식에 사건 기록 없음 · 대화 엔진이 미인지 사건에 관한 발화를 차단함";
     currentSpeaker = npc.name;
   } else {
     currentDialogue = "지금은 더 할 말이 없네.";
@@ -322,7 +345,10 @@ function triggerLostEvent() {
     publicNoticeNpcIds: [],
     severity: 0.72,
     outcome: "harmful",
-    goalDeltas: [{ npcId: "mira", goalId: "recover_satchel", status: "active" }]
+    goalDeltas: [
+      { npcId: "mira", goalId: "recover_satchel", status: "active" },
+      { npcId: "ellen", goalId: "help_guest", status: "active" }
+    ]
   };
   if (commitEvent(event)) {
     lostEventId = event.id;
@@ -373,7 +399,10 @@ function recoverSatchel() {
     severity: 0.65,
     outcome: "beneficial",
     resolvesEventIds: [lostEventId],
-    goalDeltas: [{ npcId: "mira", goalId: "recover_satchel", status: "completed" }]
+    goalDeltas: [
+      { npcId: "mira", goalId: "recover_satchel", status: "completed" },
+      { npcId: "ellen", goalId: "help_guest", status: "completed" }
+    ]
   };
   if (commitEvent(event)) {
     resolvedEventId = event.id;
@@ -392,5 +421,6 @@ $("event-rumor").addEventListener("click", transmitRumor);
 $("event-recovered").addEventListener("click", recoverSatchel);
 $("talk-greet").addEventListener("click", () => speak("greeting", ["inn"]));
 $("talk-event").addEventListener("click", () => speak("answer", ["lost_property", "belongings"]));
+$("talk-request").addEventListener("click", () => speak("request", ["lost_property", "belongings"]));
 
 render();
