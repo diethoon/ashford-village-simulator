@@ -35,6 +35,16 @@ function emotionFor(
   }
 
   if (event.outcome === "harmful" && (tags.includes("danger") || tags.includes("fire"))) {
+    const goalTags = npc.goals
+      .filter((goal) => goal.priority > 0)
+      .flatMap((goal) => goal.tags);
+    const personallyRelevant = intersects(tags, [...npc.concerns, ...goalTags]);
+
+    if (directlyAffected) return "fear";
+    if (knowledge.channel === "direct_observation" && !personallyRelevant) {
+      return "curiosity";
+    }
+    if (npc.traits.compassion >= 0.8 && tags.includes("injury")) return "grief";
     return "fear";
   }
 
