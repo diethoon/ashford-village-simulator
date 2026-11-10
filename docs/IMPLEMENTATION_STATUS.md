@@ -21,14 +21,14 @@
 - [x] Event-linked emotional appraisal and gradual emotion decay, with memory retained separately.
 - [x] Dialogue candidate filtering by speaker, intent, topic, personal knowledge, emotion, and actual NPC resource quantities.
 - [x] Atomic world-event commit for the prototype slice: resource deltas are validated before state mutation; the resulting event is then propagated only to eligible NPCs.
-- [x] Market-fire vertical-slice test cases covering different knowledge, emotional response, dialogue, resource loss, and rejection of invalid resource transitions.
+- [x] Market-fire vertical-slice test cases covering different knowledge, emotional response, dialogue, resource loss, and rejection of invalid resource transitions. CI verifies 10/10 tests and strict TypeScript checks.
 - [x] GitHub Actions workflow file for type-checking and core tests.
 
 ## Verification status
 
 - Code and test files have been committed to the repository.
 - The GitHub Actions workflow file is present.
-- [ ] A workflow run has not yet been observed. The Actions API currently returns zero workflow runs, so the new TypeScript tests and type-check must not yet be described as passing.
+- [x] GitHub Actions run b886845c7f62355d62be8d83d1be2dad3e642cfe passed: TypeScript type-check succeeded and all 10 world-dialogue tests passed (0 failures). See https://github.com/diethoon/ashford-village-simulator/actions/runs/42907614102.
 - [ ] The TypeScript core slice is not yet wired into the playable inn UI or the earlier standalone prototype.
 - [ ] Runtime no-network/no-LLM checks for the complete application remain pending because the earlier application source has not yet been imported into this repository.
 
@@ -50,3 +50,12 @@
 4. Add actual inn NPC dialogue variants driven by world events, resource state, memories, relationship state, and personal knowledge.
 5. Add save migration and deterministic replay tests for event knowledge, emotion causes, memories, and dialogue history.
 6. Expand beyond the inn only after the vertical slice proves coherent over multi-day tests.
+
+
+## World-dialogue CI milestone (2026-11-11)
+
+- User-confirmed requirement recorded as ADR-008: conversation content, delivery, and emotions must match the current world and the specific NPC's experience or knowledge.
+- Added a causal world-dialogue contract and a market-fire scenario in which the directly affected shopkeeper and an unrelated witness form different emotional reactions; a distant uninformed resident cannot speak about the event.
+- Added atomic resource delta validation so a world event cannot partially apply when a resource quantity would become invalid.
+- GitHub Actions verification: commit b886845c7f62355d62be8d83d1be2dad3e642cfe, 10 tests passed, 0 failed; TypeScript type-check passed.
+- This verifies the isolated TypeScript dialogue-core slice only. It does NOT yet verify integration with the legacy playable inn prototype, the full browser app, or a deployment.
