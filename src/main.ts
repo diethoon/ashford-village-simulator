@@ -81,6 +81,15 @@ const channelNames: Record<string, string> = {
   public_information: "공개 정보"
 };
 
+const goalStatusNames: Record<string, string> = {
+  unresolved: "아직 해결되지 않음",
+  active: "직접 해결을 시도 중",
+  delegated: "타인에게 도움 요청",
+  completed: "목표 달성",
+  failed: "실패",
+  abandoned: "포기"
+};
+
 const emotionNames: Record<string, string> = {
   fear: "공포",
   worry: "걱정",
@@ -182,6 +191,14 @@ function renderSelectedNpc() {
     : "전달받은 정보 없음");
   setText("voice-style", npc.voice.styleTags.slice(0, 3).join(" · "));
   setText("voice-identity", profile.characterCore);
+  const currentGoal = [...npc.goals]
+    .filter((goal) => !["completed", "failed", "abandoned"].includes(goal.status))
+    .sort((a, b) => b.priority - a.priority)[0] ?? [...npc.goals]
+      .sort((a, b) => b.priority - a.priority)[0];
+  setText("goal-state", currentGoal
+    ? goalStatusNames[currentGoal.status] ?? currentGoal.status
+    : "진행 중인 목표 없음");
+  setText("goal-detail", currentGoal?.text ?? currentGoal?.tags.join(" · ") ?? "현재 개인 목표 없음");
 
   const knowledgeList = $("knowledge-list");
   knowledgeList.innerHTML = "";
