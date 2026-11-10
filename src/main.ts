@@ -189,7 +189,8 @@ function renderSelectedNpc() {
   if (primaryEmotion) {
     const intensity = Math.round(primaryEmotion.intensity * 100);
     setText("emotion-state", `${emotionNames[primaryEmotion.label] ?? primaryEmotion.label} · ${intensity}%`);
-    setText("emotion-cause", `원인: ${primaryEmotion.causeEventId}`);
+    const causeEvent = state.events.find((event) => event.id === primaryEmotion.causeEventId);
+    setText("emotion-cause", `원인: ${causeEvent?.summary ?? primaryEmotion.causeEventId}`);
     setText("mood-chip", emotionNames[primaryEmotion.label] ?? primaryEmotion.label);
   } else {
     setText("emotion-state", "특별한 감정 없음");
