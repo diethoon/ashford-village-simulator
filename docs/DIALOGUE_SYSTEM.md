@@ -1,6 +1,6 @@
 # Dialogue System Design — Ashford
 
-> Parent authority: docs/ASHFORD_SSOT.md, especially Section 6  
+> Parent authority: docs/MASTER_SPEC.md §9  
 > Status: Implementation design proposal; schema and scoring constants are not yet frozen  
 > Runtime constraint: zero LLM calls, zero required network calls
 
@@ -254,3 +254,10 @@ Examples:
 - A goal delegated to another person may produce follow-up dialogue about progress, trust, or concern, but not the original unissued request.
 - When a world event completes the goal, the request disappears. A new gratitude, relief, or follow-up line can become eligible if its knowledge, memory, emotion, and relationship requirements are met.
 - A goal update must be attached to a valid world event and pass the simulation's transition rules before it influences dialogue.
+
+
+## 16. Goal emergence and request truth
+
+A dialogue request may become available after an NPC-specific goal rule matches that NPC's own knowledge record. The entry remains hard-filtered by the resulting canonical goal status and any required knowledge, emotion, resource, and relationship conditions. A global event or another NPC's goal is never sufficient to authorize a request.
+
+See `docs/GOAL_SYSTEM.md` for deterministic goal instantiation, provenance, terminal-state protection, and the current limits of autonomous planning.
