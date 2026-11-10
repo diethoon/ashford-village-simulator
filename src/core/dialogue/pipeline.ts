@@ -1,5 +1,18 @@
 import { observeWorldEvent } from "./awareness.js";
-import type { EventCommitResult, NpcState, SimulationSnapshot, WorldEvent } from "./types.js";
+import type { EventCommitResult, GoalDelta, NpcState, SimulationSnapshot, WorldEvent } from "./types.js";
+
+function isValidGoalTransition(from: string, to: string): boolean {
+  if (from === to) return true;
+  const allowed: Record<string, string[]> = {
+    unresolved: ["active", "failed", "abandoned"],
+    active: ["delegated", "completed", "failed", "abandoned"],
+    delegated: ["active", "completed", "failed", "abandoned"],
+    completed: [],
+    failed: [],
+    abandoned: []
+  };
+  return (allowed[from] ?? []).includes(to);
+}
 
 function eventReferencesExist(npcs: NpcState[], event: WorldEvent): boolean {
   const ids = new Set(npcs.map((npc) => npc.id));
@@ -10,7 +23,9 @@ function eventReferencesExist(npcs: NpcState[], event: WorldEvent): boolean {
   ];
   const relationshipParticipants = (event.relationshipDeltas ?? [])
     .flatMap((change) => [change.npcId, change.targetNpcId]);
-  return [...eventParticipants, ...relationshipParticipants].every((id) => ids.has(id));
+  const goalParticipants = (event.goalDeltas ?? []).map((change) => change.npcId);
+  return [...eventParticipants, ...relationshipParticipants, ...goalParticipants]
+    .every((id) => ids.has(id));
 }
 
 /**
@@ -125,6 +140,31 @@ export function commitWorldEvent(
     }
   }
 
+  const goalDeltas = new Map<string, GoalDelta>();
+  for (const change of event.goalDeltas ?? []) {
+    const key = `${change.npcId}::${change.goalId}`;
+    const prior = goalDeltas.get(key);
+    if (prior && prior.status !== change.status) {
+      return { ok: false, state, error: `Conflicting goal updates in event: ${key}` };
+    }
+    goalDeltas.set(key, change);
+  }
+
+  for (const change of goalDeltas.values()) {
+    const npc = npcById.get(change.npcId)!;
+    const goal = npc.goals.find((item) => item.id === change.goalId);
+    if (!goal) {
+      return { ok: false, state, error: `Unknown NPC goal: ${change.npcId}/${change.goalId}` };
+    }
+    if (!isValidGoalTransition(goal.status, change.status)) {
+      return {
+        ok: false,
+        state,
+        error: `Invalid goal transition: ${change.npcId}/${change.goalId} ${goal.status} -> ${change.status}`
+      };
+    }
+  }
+
   const changedResources = new Map<string, NpcState>();
   for (const change of totals.values()) {
     const npc = changedResources.get(change.npcId) ?? npcById.get(change.npcId)!;
@@ -159,10 +199,34 @@ export function commitWorldEvent(
     });
   }
 
+  const changedGoals = new Map<string, NpcState>();
+  for (const change of goalDeltas.values()) {
+    const npc = changedGoals.get(change.npcId) ??
+      changedRelationships.get(change.npcId) ??
+      changedResources.get(change.npcId) ??
+      npcById.get(change.npcId)!;
+    changedGoals.set(change.npcId, {
+      ...npc,
+      goals: npc.goals.map((goal) =>
+        goal.id === change.goalId ? { ...goal, status: change.status } : goal
+      )
+    });
+  }
+
   const committedNpcs = state.npcs.map((npc) =>
-    changedRelationships.get(npc.id) ?? changedResources.get(npc.id) ?? npc
+    changedGoals.get(npc.id) ??
+    changedRelationships.get(npc.id) ??
+    changedResources.get(npc.id) ??
+    npc
   );
-  const eventSnapshot = { ...event, tags: [...event.tags], resourceDeltas: [...(event.resourceDeltas ?? [])] };
+  const eventSnapshot = {
+    ...event,
+    tags: [...event.tags],
+    resourceDeltas: [...(event.resourceDeltas ?? [])],
+    relationshipDeltas: [...(event.relationshipDeltas ?? [])],
+    goalDeltas: [...(event.goalDeltas ?? [])],
+    resolvesEventIds: [...(event.resolvesEventIds ?? [])]
+  };
   const informedNpcs = committedNpcs.map((npc) => observeWorldEvent(npc, eventSnapshot));
 
   return {
