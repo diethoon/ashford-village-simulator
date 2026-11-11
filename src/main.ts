@@ -337,6 +337,13 @@ function renderGoalBoard() {
   for (const { npc, goal } of goals) {
     const card = document.createElement("article");
     card.className = `goal-card goal-${goal.status}`;
+    const detailId = `goal-detail-${npc.id}-${goal.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "goal-card-toggle";
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-controls", detailId);
+
     const header = document.createElement("div");
     header.className = "goal-card-header";
     const owner = document.createElement("strong");
@@ -344,11 +351,26 @@ function renderGoalBoard() {
     const status = document.createElement("span");
     status.className = "goal-status";
     status.textContent = goalStatusNames[goal.status] ?? goal.status;
-    header.append(owner, status);
+    const expandHint = document.createElement("small");
+    expandHint.className = "goal-expand-hint";
+    expandHint.textContent = "근거 보기 +";
+    header.append(owner, status, expandHint);
 
     const title = document.createElement("p");
     title.className = "goal-card-title";
     title.textContent = goal.text ?? goal.tags.join(" · ");
+    toggle.append(header, title);
+
+    const details = document.createElement("div");
+    details.className = "goal-card-details";
+    details.id = detailId;
+    details.hidden = true;
+    toggle.addEventListener("click", () => {
+      const expanded = details.hidden;
+      details.hidden = !expanded;
+      toggle.setAttribute("aria-expanded", String(expanded));
+      expandHint.textContent = expanded ? "근거 접기 −" : "근거 보기 +";
+    });
 
     const priority = document.createElement("small");
     priority.className = "goal-priority";
@@ -388,7 +410,8 @@ function renderGoalBoard() {
     const footer = document.createElement("div");
     footer.className = "goal-card-footer";
     footer.append(priority, proof);
-    card.append(header, title, footer);
+    details.append(footer);
+    card.append(toggle, details);
     list.append(card);
   }
 
