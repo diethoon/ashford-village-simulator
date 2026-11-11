@@ -336,7 +336,8 @@ main {
     "overview simulation"
     "controls simulation"
     "goals simulation"
-    "timeline timeline";
+    "timeline timeline"
+    "footer footer";
   gap: 10px 12px;
   align-items: stretch;
 }
