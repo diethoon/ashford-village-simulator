@@ -119,6 +119,73 @@ export interface GoalRequirement {
   statuses: GoalStatus[];
 }
 
+export interface NpcNeedState {
+  id: string;
+  /** Normalized urgency: 0 = satisfied, 1 = critically unmet. */
+  value: number;
+}
+
+export interface NpcCapabilityState {
+  id: string;
+  /** Normalized proficiency from 0 to 1. */
+  proficiency: number;
+}
+
+export interface NpcActionNeedRequirement {
+  needId: string;
+  minValue?: number;
+}
+
+export interface NpcActionCapabilityRequirement {
+  capabilityId: string;
+  minProficiency?: number;
+}
+
+export interface NpcActionResourceRequirement {
+  resourceId: string;
+  min?: number;
+  max?: number;
+}
+
+export interface NpcActionResult {
+  eventType: string;
+  summary: string;
+  tags: string[];
+  severity: number;
+  outcome: EventOutcome;
+  /** Applies to the rule's goal. Terminal/progress states only. */
+  goalStatus?: "delegated" | "completed" | "failed" | "abandoned";
+  /** Resolves the goal's originating events when the action completes it. */
+  resolvesGoalOriginEvents?: boolean;
+  additionalGoalDeltas?: GoalDelta[];
+  resourceDeltas?: ResourceDelta[];
+  needDeltas?: NeedDelta[];
+  affectedNpcIds?: string[];
+  witnessNpcIds?: string[];
+  publicNoticeNpcIds?: string[];
+}
+
+export interface NpcActionRule {
+  id: string;
+  kind: "self_resolve" | "maintain_need";
+  goalId?: string;
+  requiredGoalStatuses?: GoalStatus[];
+  requiredKnowledgeTags?: string[];
+  requiredKnowledgeChannels?: KnowledgeChannel[];
+  minimumKnowledgeConfidence?: number;
+  requiredNeeds?: NpcActionNeedRequirement[];
+  requiredCapabilities?: NpcActionCapabilityRequirement[];
+  requiredResources?: NpcActionResourceRequirement[];
+  /** Positive quantities paid by the acting NPC before the outcome is committed. */
+  resourceCosts?: Record<string, number>;
+  baseUtility: number;
+  goalPriorityWeight?: number;
+  needWeights?: Record<string, number>;
+  durationTicks: number;
+  cooldownTicks?: number;
+  result: NpcActionResult;
+}
+
 export interface NpcState {
   id: string;
   name: string;
@@ -139,6 +206,11 @@ export interface NpcState {
   goals: NpcGoal[];
   /** Optional authored rules; goals are instantiated only after personal knowledge arrives. */
   goalRules?: NpcGoalRule[];
+  /** Dynamic needs and capabilities used by the deterministic utility planner. */
+  needs?: NpcNeedState[];
+  capabilities?: NpcCapabilityState[];
+  /** Per-person authored action candidates; eligibility is evaluated against canonical state. */
+  actionRules?: NpcActionRule[];
   resources: Record<string, number>;
   knowledge: KnowledgeRecord[];
   emotions: EmotionState[];
@@ -149,6 +221,12 @@ export interface NpcState {
 export interface ResourceDelta {
   npcId: string;
   resourceId: string;
+  delta: number;
+}
+
+export interface NeedDelta {
+  npcId: string;
+  needId: string;
   delta: number;
 }
 
@@ -168,6 +246,9 @@ export interface WorldEvent {
   resourceDeltas?: ResourceDelta[];
   relationshipDeltas?: RelationshipDelta[];
   goalDeltas?: GoalDelta[];
+  needDeltas?: NeedDelta[];
+  /** Authored action rule that initiated this event, when the event came from NPC agency. */
+  actionRuleId?: string;
   resolvesEventIds?: string[];
 }
 

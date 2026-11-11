@@ -16,6 +16,8 @@ function isValidGoalTransition(from: string, to: string): boolean {
 
 function eventReferencesExist(npcs: NpcState[], event: WorldEvent): boolean {
   const ids = new Set(npcs.map((npc) => npc.id));
+  // actorIds can include non-NPC actors (for example, the player).
+  // NPC references used for knowledge projection and deltas are validated here.
   const eventParticipants = [
     ...event.affectedNpcIds,
     ...event.witnessNpcIds,
@@ -24,7 +26,8 @@ function eventReferencesExist(npcs: NpcState[], event: WorldEvent): boolean {
   const relationshipParticipants = (event.relationshipDeltas ?? [])
     .flatMap((change) => [change.npcId, change.targetNpcId]);
   const goalParticipants = (event.goalDeltas ?? []).map((change) => change.npcId);
-  return [...eventParticipants, ...relationshipParticipants, ...goalParticipants]
+  const needParticipants = (event.needDeltas ?? []).map((change) => change.npcId);
+  return [...eventParticipants, ...relationshipParticipants, ...goalParticipants, ...needParticipants]
     .every((id) => ids.has(id));
 }
 
@@ -83,6 +86,33 @@ export function commitWorldEvent(
         ok: false,
         state,
         error: `Resource transition would create an invalid quantity: ${change.npcId}/${change.resourceId}`
+      };
+    }
+  }
+
+  const needTotals = new Map<string, { npcId: string; needId: string; delta: number }>();
+  for (const change of event.needDeltas ?? []) {
+    if (!Number.isFinite(change.delta)) {
+      return { ok: false, state, error: "Need delta must be a finite number." };
+    }
+    const key = `${change.npcId}::${change.needId}`;
+    const current = needTotals.get(key);
+    needTotals.set(key, {
+      npcId: change.npcId,
+      needId: change.needId,
+      delta: (current?.delta ?? 0) + change.delta
+    });
+  }
+
+  for (const change of needTotals.values()) {
+    const npc = npcById.get(change.npcId);
+    const need = npc?.needs?.find((item) => item.id === change.needId);
+    const next = (need?.value ?? Number.NaN) + change.delta;
+    if (!need || !Number.isFinite(need.value) || next < 0 || next > 1) {
+      return {
+        ok: false,
+        state,
+        error: `Need transition would leave the valid range or references an unknown need: ${change.npcId}/${change.needId}`
       };
     }
   }
@@ -213,7 +243,23 @@ export function commitWorldEvent(
     });
   }
 
+  const changedNeeds = new Map<string, NpcState>();
+  for (const change of needTotals.values()) {
+    const npc = changedNeeds.get(change.npcId) ??
+      changedGoals.get(change.npcId) ??
+      changedRelationships.get(change.npcId) ??
+      changedResources.get(change.npcId) ??
+      npcById.get(change.npcId)!;
+    changedNeeds.set(change.npcId, {
+      ...npc,
+      needs: (npc.needs ?? []).map((need) =>
+        need.id === change.needId ? { ...need, value: need.value + change.delta } : need
+      )
+    });
+  }
+
   const committedNpcs = state.npcs.map((npc) =>
+    changedNeeds.get(npc.id) ??
     changedGoals.get(npc.id) ??
     changedRelationships.get(npc.id) ??
     changedResources.get(npc.id) ??
@@ -225,6 +271,7 @@ export function commitWorldEvent(
     resourceDeltas: [...(event.resourceDeltas ?? [])],
     relationshipDeltas: [...(event.relationshipDeltas ?? [])],
     goalDeltas: [...(event.goalDeltas ?? [])],
+    needDeltas: [...(event.needDeltas ?? [])],
     resolvesEventIds: [...(event.resolvesEventIds ?? [])]
   };
   const informedNpcs = committedNpcs.map((npc) => observeWorldEvent(npc, eventSnapshot));

@@ -1,4 +1,5 @@
 import { commitWorldEvent } from "./core/dialogue/pipeline.js";
+import { runNpcAutonomyStep, selectNpcAction } from "./core/agency/autonomy.js";
 import { hasActionableGoal, selectDialogue } from "./core/dialogue/select.js";
 import { transmitEventKnowledge } from "./core/dialogue/awareness.js";
 import {
@@ -62,7 +63,60 @@ function createNpc(seed: typeof npcSeed[number]): NpcState {
     knowledge: [],
     emotions: [],
     memories: [],
-    relationships: {}
+    relationships: {},
+    needs: seed.id === "mira"
+      ? [{ id: "security", value: 0.62 }]
+      : seed.id === "bram"
+        ? [{ id: "fatigue", value: 0.85 }]
+        : [],
+    capabilities: seed.id === "mira"
+      ? [{ id: "search", proficiency: 0.86 }]
+      : seed.id === "bram"
+        ? [{ id: "woodworking", proficiency: 0.9 }]
+        : [],
+    actionRules: seed.id === "mira" ? [{
+      id: "mira-autonomous-satchel-search",
+      kind: "self_resolve",
+      goalId: "recover_satchel",
+      requiredGoalStatuses: ["active"],
+      requiredKnowledgeTags: ["lost_property", "satchel"],
+      requiredKnowledgeChannels: ["direct_experience"],
+      minimumKnowledgeConfidence: 0.7,
+      requiredNeeds: [{ needId: "security", minValue: 0.4 }],
+      requiredCapabilities: [{ capabilityId: "search", minProficiency: 0.7 }],
+      baseUtility: 0.3,
+      goalPriorityWeight: 0.4,
+      needWeights: { security: 0.2 },
+      durationTicks: 1,
+      cooldownTicks: 1,
+      result: {
+        eventType: "satchel_recovered_autonomously",
+        summary: "미라가 여관 구석과 짐 보관 장소를 다시 살펴 잃어버린 가방을 스스로 찾아냈다.",
+        tags: ["satchel_recovered", "lost_property", "recovery", "relief"],
+        severity: 0.65,
+        outcome: "beneficial",
+        goalStatus: "completed",
+        resolvesGoalOriginEvents: true,
+        witnessNpcIds: ["ellen"],
+        additionalGoalDeltas: [{ npcId: "ellen", goalId: "help_guest", status: "completed" }],
+        needDeltas: [{ npcId: "mira", needId: "security", delta: -0.62 }]
+      }
+    }] : seed.id === "bram" ? [{
+      id: "bram-take-rest",
+      kind: "maintain_need",
+      requiredNeeds: [{ needId: "fatigue", minValue: 0.7 }],
+      needWeights: { fatigue: 0.5 },
+      baseUtility: 0.2,
+      durationTicks: 1,
+      result: {
+        eventType: "npc_rest",
+        summary: "브램이 여관 구석에서 잠시 쉬며 쌓인 피로를 풀었다.",
+        tags: ["rest", "fatigue", "recovery"],
+        severity: 0.2,
+        outcome: "beneficial",
+        needDeltas: [{ npcId: "bram", needId: "fatigue", delta: -0.5 }]
+      }
+    }] : []
   }, profile);
 }
 
@@ -283,6 +337,14 @@ function renderGoalBoard() {
   for (const { npc, goal } of goals) {
     const card = document.createElement("article");
     card.className = `goal-card goal-${goal.status}`;
+    const detailId = `goal-detail-${npc.id}-${goal.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+    const toggle = document.createElement("div");
+    toggle.className = "goal-card-toggle";
+    toggle.setAttribute("role", "button");
+    toggle.setAttribute("tabindex", "0");
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-controls", detailId);
+
     const header = document.createElement("div");
     header.className = "goal-card-header";
     const owner = document.createElement("strong");
@@ -290,11 +352,33 @@ function renderGoalBoard() {
     const status = document.createElement("span");
     status.className = "goal-status";
     status.textContent = goalStatusNames[goal.status] ?? goal.status;
-    header.append(owner, status);
+    const expandHint = document.createElement("small");
+    expandHint.className = "goal-expand-hint";
+    expandHint.textContent = "근거 보기 +";
+    header.append(owner, status, expandHint);
 
     const title = document.createElement("p");
     title.className = "goal-card-title";
     title.textContent = goal.text ?? goal.tags.join(" · ");
+    toggle.append(header, title);
+
+    const details = document.createElement("div");
+    details.className = "goal-card-details";
+    details.id = detailId;
+    details.hidden = true;
+    const toggleDetails = () => {
+      const expanded = details.hidden;
+      details.hidden = !expanded;
+      toggle.setAttribute("aria-expanded", String(expanded));
+      expandHint.textContent = expanded ? "근거 접기 −" : "근거 보기 +";
+    };
+    toggle.addEventListener("click", toggleDetails);
+    toggle.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        toggleDetails();
+      }
+    });
 
     const priority = document.createElement("small");
     priority.className = "goal-priority";
@@ -334,7 +418,8 @@ function renderGoalBoard() {
     const footer = document.createElement("div");
     footer.className = "goal-card-footer";
     footer.append(priority, proof);
-    card.append(header, title, footer);
+    details.append(footer);
+    card.append(toggle, details);
     list.append(card);
   }
 
@@ -386,6 +471,62 @@ function renderFocus() {
   action.textContent = `${lead.npc.name.split(" ")[0]}의 이야기 듣기`;
 }
 
+let autonomyStatus = "현재 조건에서 바로 실행할 수 있는 주민 행동이 없습니다.";
+
+function renderAutonomy() {
+  const button = $("autonomy-step") as HTMLButtonElement;
+  const decision = selectNpcAction(state);
+  if (!decision) {
+    button.disabled = true;
+    button.textContent = "실행 가능한 자율 행동 없음";
+    setText("autonomy-hint", autonomyStatus);
+    return;
+  }
+
+  button.disabled = false;
+  button.textContent = `${decision.npcName}의 자율 행동 실행`;
+  const kind = decision.kind === "self_resolve" ? "개인 목표를 스스로 해결" : "자신의 필요를 충족";
+  const goal = decision.goalText ? ` · 목표: ${decision.goalText}` : "";
+  const evidence = decision.evidence.length
+    ? ` · 근거: ${decision.evidence.map((item) => `${channelNames[item.channel] ?? item.channel} ${Math.round(item.confidence * 100)}%`).join(", ")}`
+    : "";
+  const capabilities = decision.capabilities.length
+    ? ` · 능력: ${decision.capabilities.map((item) => `${item.capabilityId} ${Math.round(item.proficiency * 100)}%`).join(", ")}`
+    : "";
+  const needs = decision.needContributions.length
+    ? ` · 필요도: ${decision.needContributions.map((item) => `${item.needId} ${Math.round(item.value * 100)}%`).join(", ")}`
+    : "";
+  setText("autonomy-hint", `다음 행동 후보: ${decision.npcName} · ${kind}${goal}${evidence}${capabilities}${needs} · 선택 점수 ${Math.round(decision.score * 100)}`);
+}
+
+function runAutonomy() {
+  const result = runNpcAutonomyStep(state);
+  if (!result.ok) {
+    autonomyStatus = `행동이 거부되었습니다. 세계 상태는 바뀌지 않았습니다: ${result.error}`;
+    renderAutonomy();
+    return;
+  }
+  if (!result.acted) {
+    autonomyStatus = "현재 개인 목표·지식·능력·욕구 조건을 모두 충족하는 행동 후보가 없습니다.";
+    renderAutonomy();
+    return;
+  }
+
+  state = result.state;
+  addTimeline(result.event.tick, result.event.summary, "world");
+  if (lostEventId && result.event.resolvesEventIds?.includes(lostEventId)) {
+    resolvedEventId = result.event.id;
+  }
+  autonomyStatus = `${result.decision.npcName}이(가) 스스로 행동했습니다. 선택 점수 ${Math.round(result.decision.score * 100)} · 판단 근거: ${result.decision.reason}`;
+  currentDialogue = result.event.summary;
+  currentTrace = `자율 행동 규칙: ${result.decision.ruleId} · 점수: ${result.decision.score.toFixed(4)} · 근거 사건: ${result.decision.evidence.map((item) => item.eventId).join(", ") || "개인 필요/상태"} · 결과: ${result.event.type}`;
+  currentSpeaker = "NPC 자율 행동";
+  render();
+  setText("dialogue-speaker", currentSpeaker);
+  setText("dialogue-text", currentDialogue);
+  setText("dialogue-trace", currentTrace);
+}
+
 function render() {
   setText("world-clock", `TICK ${String(state.tick).padStart(3, "0")}`);
   renderPeople();
@@ -393,6 +534,7 @@ function render() {
   renderTimeline();
   renderGoalBoard();
   renderFocus();
+  renderAutonomy();
 
   const lost = Boolean(lostEventId);
   const resolved = Boolean(resolvedEventId);
@@ -545,6 +687,7 @@ function recoverSatchel() {
 $("event-lost").addEventListener("click", triggerLostEvent);
 $("event-rumor").addEventListener("click", transmitRumor);
 $("event-recovered").addEventListener("click", recoverSatchel);
+$("autonomy-step").addEventListener("click", runAutonomy);
 $("talk-greet").addEventListener("click", () => speak("greeting", ["inn"]));
 $("talk-event").addEventListener("click", () => speak("answer", ["lost_property", "belongings"]));
 $("talk-request").addEventListener("click", () => speak("request", ["lost_property", "belongings"]));

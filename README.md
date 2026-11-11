@@ -16,6 +16,7 @@ Ashford is an offline-first, LLM-free village simulation RPG. Its residents have
 6. [docs/DIALOGUE_SYSTEM.md](docs/DIALOGUE_SYSTEM.md) — authored dialogue, personal voices, selection, and content rules.
 7. [docs/GOAL_SYSTEM.md](docs/GOAL_SYSTEM.md) — knowledge-driven personal goal emergence and current autonomy boundaries.
 8. [docs/UI_UX_SPEC.md](docs/UI_UX_SPEC.md) — mobile-first, context-first interface and evidence presentation.
+9. [docs/AGENCY_SYSTEM.md](docs/AGENCY_SYSTEM.md) — deterministic utility-based NPC action selection and event commits.
 
 ## Core principles
 
@@ -44,7 +45,7 @@ The repository includes a runnable static browser demo backed by the TypeScript 
 
 The core validates event-driven resource, relationship, and goal transitions atomically. Personal knowledge delivery can instantiate or activate NPC-specific goals through deterministic rules; uninformed residents do not receive goals from events they have not learned about. Dialogue selection checks personal knowledge, acquisition channel, emotion, current resources, listener relationship, and goal status. The same eligibility rule controls whether the UI exposes a help-request action.
 
-This is a first goal-emergence slice, not yet a complete autonomous planner: needs/utility evaluation, capability and schedule constraints, self-resolution, delegation, and multi-agent quest competition remain future work. Current implementation and verification limits are tracked in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).
+The first utility-action loop is now connected to the demo: Mira can autonomously find her satchel when her active goal, firsthand knowledge, search capability, and security need satisfy her authored rule. Bram can also choose a rest action when fatigue is high. The loop selects one best eligible action, records its decision evidence, and commits its consequences through the atomic world-event pipeline. This remains an initial autonomy slice; full schedules, travel, delegation, contested resources, and village-wide multi-step plans remain future work. Current implementation and verification limits are tracked in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).
 
 ## Development
 
