@@ -119,3 +119,29 @@ This is a static TypeScript browser shell, not the final React/PWA implementatio
 - After execution, show the committed world event and the evidence/goal/capability/need factors used by the planner.
 - The action preview must be recomputed from canonical state after every event. It must not remain visible after its goal, resources, evidence, or prerequisites become invalid.
 - On narrow phones, stack the explanation above a full-width 44px action button.
+
+
+## 10. Compact monochrome dashboard revision (2026-11-11)
+
+This section supersedes the decorative Liquid Glass treatment in §2 for the current browser vertical slice. The reference image is a layout/hierarchy reference, not a directive to reproduce its blurry photographic background or make every card translucent.
+
+### Visual direction
+- Use a quiet, solid charcoal/graphite canvas with opaque neutral panels and restrained borders.
+- Reserve a single neutral highlight treatment for the highest-priority world pulse and the primary action. Use semantic green/red only where state genuinely requires it.
+- Do not use backdrop blur, large gradients, glowing edges, or decorative translucency across the interface. Depth comes from spacing, contrast, border weight, and typography.
+- Keep the interface editorial and information-dense: compact headings, restrained metadata, clear card alignment, and consistent spacing.
+
+### One-screen information strategy
+- On desktop, arrange world pulse, event controls, goal summary, and the active resident/conversation surface in a compact asymmetric dashboard.
+- On phones, prioritize the world pulse, the available autonomy action, resident selection, and conversation controls. Avoid forcing every low-level record to remain expanded simultaneously.
+- Use progressive disclosure for evidence, confidence/source details, personal knowledge, emotional causes, and chronological history. Summaries must communicate what is inside before expansion.
+- Goal cards show owner, status, and a short goal label by default. Evidence, confidence, and priority expand from the card.
+- Test-event tools and causal history remain available but collapsed until requested.
+- Resident emotion/knowledge/personality/goal details expand independently from the primary conversation actions.
+
+### Responsive and legibility rules
+- Use compact type scales while retaining readable Korean body text; metadata may be smaller but must not become the primary carrier of meaning.
+- Keep touch actions at or above 40–44 CSS px and maintain visible focus states.
+- Prefer a short first-screen overview with expandable detail over shrinking all text until it becomes difficult to read.
+- At narrow widths, keep resident selection horizontally scrollable and make the key action controls full-width where needed.
+- All surfaces must remain clear with blur and motion disabled; the layout must not depend on visual effects to explain hierarchy.
