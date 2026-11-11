@@ -39,6 +39,7 @@ function searchRule(overrides: Partial<NpcActionRule> = {}): NpcActionRule {
     needWeights: { security: 0.2 },
     durationTicks: 2,
     cooldownTicks: 1,
+    resourceCosts: { rope: 1 },
     result: {
       eventType: "satchel_recovered_autonomously",
       summary: "미라가 여관 구석과 짐 보관 장소를 다시 살펴 잃어버린 가방을 찾았다.",
@@ -49,7 +50,6 @@ function searchRule(overrides: Partial<NpcActionRule> = {}): NpcActionRule {
       resolvesGoalOriginEvents: true,
       witnessNpcIds: ["ellen"],
       additionalGoalDeltas: [{ npcId: "ellen", goalId: "help_guest", status: "completed" }],
-      resourceCosts: { rope: 1 },
       needDeltas: [{ npcId: "mira", needId: "security", delta: -0.6 }]
     },
     ...overrides
