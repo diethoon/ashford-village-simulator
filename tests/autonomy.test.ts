@@ -154,7 +154,7 @@ test("ability, need and resource preconditions constrain candidate availability"
   const withoutResource: SimulationSnapshot = {
     ...state,
     npcs: state.npcs.map((npc) => npc.id === "mira"
-      ? { ...npc, actionRules: [searchRule({ resourceCosts: { rope: 1 } })] }
+      ? { ...npc, actionRules: [searchRule({ resourceCosts: { rope: 3 } })] }
       : npc)
   };
   assert.equal(selectNpcAction(withoutSkill), null);
@@ -250,6 +250,7 @@ test("candidate ordering is stable when utility scores tie", () => {
     }],
     needs: [{ id: "security", value: 0.6 }],
     capabilities: [{ id: "search", proficiency: 0.85 }],
+    resources: { rope: 2 },
     knowledge: state.npcs.find((npc) => npc.id === "mira")!.knowledge.map((record) => ({ ...record })),
     actionRules: [searchRule({ id: "zed-search", goalId: "goal-z", requiredGoalStatuses: ["active"] })]
   });
