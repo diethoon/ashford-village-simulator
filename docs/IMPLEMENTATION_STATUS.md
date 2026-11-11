@@ -49,11 +49,11 @@
 
 Latest verified implementation run:
 - Feature branch: `feature/npc-autonomy-v1`
-- Verified code commit: `9d642b73b18fecf7a1b3b9bf7f3916eda01397d9`
+- Verified code commit: `d4cbfbb82f3d5ec74b94f0239433ea48beffce55`
 - Type-check: passed.
-- Tests: 29 passed, 0 failed.
+- Tests: 31 passed, 0 failed.
 - Browser build: passed.
-- Run: https://github.com/diethoon/ashford-village-simulator/actions/runs/42952993550
+- Run: https://github.com/diethoon/ashford-village-simulator/actions/runs/42953722327
 - Review: https://github.com/diethoon/ashford-village-simulator/pull/1
 - This agency implementation is on a review branch and has not yet been merged into `main`.
 
