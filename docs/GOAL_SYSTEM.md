@@ -75,10 +75,17 @@ Implemented:
 - goal board and world-pulse UI projections with evidence channel and confidence;
 - tests proving that informed NPCs can create different goals while uninformed NPCs do not.
 
+Implemented in the first deterministic agency slice:
+- per-NPC authored action rules with personal goal, knowledge-channel, need, capability, resource, and cooldown prerequisites;
+- stable candidate evaluation and utility ordering with inspectable decision evidence;
+- one-action simulation steps that convert the selected NPC action into a canonical world event;
+- atomic resource/need/goal consequences through the world-event commit pipeline;
+- self-resolution of Mira's satchel goal without player intervention, including the linked innkeeper goal and the originating event.
+
 Not yet implemented:
 - continuous need decay and utility scoring over all candidate goals;
-- explicit capability, schedule, reachability, and resource-cost models for autonomous action;
-- NPC self-resolution attempts and their world consequences;
+- full schedule, geographic reachability, and multi-agent resource allocation for autonomous action;
+- broad NPC self-resolution across the village's full object, inventory, and location systems;
 - delegation thresholds and agent-to-agent task negotiation;
 - competition among multiple NPCs over the same objective;
 - objective graphs and full emergent quest instances.

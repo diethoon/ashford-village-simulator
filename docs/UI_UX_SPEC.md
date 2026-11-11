@@ -110,3 +110,12 @@ The current browser vertical slice applies this system through:
 - a causal event timeline.
 
 This is a static TypeScript browser shell, not the final React/PWA implementation. Real-device and browser E2E validation remain separate acceptance tasks.
+
+
+## 9. NPC autonomy as a transparent interaction
+- Show the best currently eligible NPC action as a concise preview, including the acting resident, intended action, and why it is eligible.
+- Surface the decision score only as a comparative utility indicator, never as a promise of success.
+- The player may advance one explicit simulation action at a time in this prototype; the button is disabled when no valid candidate exists.
+- After execution, show the committed world event and the evidence/goal/capability/need factors used by the planner.
+- The action preview must be recomputed from canonical state after every event. It must not remain visible after its goal, resources, evidence, or prerequisites become invalid.
+- On narrow phones, stack the explanation above a full-width 44px action button.

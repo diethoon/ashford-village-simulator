@@ -259,3 +259,24 @@ button:focus-visible, a:focus-visible, summary:focus-visible {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
   .primary-button:hover:not(:disabled) { transform: none; }
 }
+
+
+/* NPC autonomy is a first-class action surface, not a hidden debug control. */
+.autonomy-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 14px 15px;
+  border: 1px solid rgba(215, 173, 120, .2);
+  border-radius: 12px;
+  background: linear-gradient(120deg, rgba(215, 173, 120, .08), rgba(159, 186, 162, .045));
+}
+.autonomy-copy { flex: 1; min-width: 0; }
+.autonomy-copy p { margin: 6px 0 0; line-height: 1.65; overflow-wrap: anywhere; }
+.autonomy-button { flex: 0 0 auto; max-width: 100%; }
+@media (max-width: 720px) {
+  .autonomy-strip { align-items: stretch; flex-direction: column; gap: 10px; }
+  .autonomy-button { width: 100%; }
+}
