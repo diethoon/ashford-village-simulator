@@ -651,7 +651,8 @@ main {
       "controls"
       "simulation"
       "goals"
-      "timeline";
+      "timeline"
+      "footer";
     gap: 8px;
   }
   .topbar { min-height: 50px; }
