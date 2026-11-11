@@ -338,9 +338,10 @@ function renderGoalBoard() {
     const card = document.createElement("article");
     card.className = `goal-card goal-${goal.status}`;
     const detailId = `goal-detail-${npc.id}-${goal.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
-    const toggle = document.createElement("button");
-    toggle.type = "button";
+    const toggle = document.createElement("div");
     toggle.className = "goal-card-toggle";
+    toggle.setAttribute("role", "button");
+    toggle.setAttribute("tabindex", "0");
     toggle.setAttribute("aria-expanded", "false");
     toggle.setAttribute("aria-controls", detailId);
 
@@ -365,11 +366,18 @@ function renderGoalBoard() {
     details.className = "goal-card-details";
     details.id = detailId;
     details.hidden = true;
-    toggle.addEventListener("click", () => {
+    const toggleDetails = () => {
       const expanded = details.hidden;
       details.hidden = !expanded;
       toggle.setAttribute("aria-expanded", String(expanded));
       expandHint.textContent = expanded ? "근거 접기 −" : "근거 보기 +";
+    };
+    toggle.addEventListener("click", toggleDetails);
+    toggle.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        toggleDetails();
+      }
     });
 
     const priority = document.createElement("small");
