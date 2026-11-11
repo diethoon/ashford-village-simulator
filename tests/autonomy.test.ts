@@ -106,11 +106,12 @@ function createActiveSnapshot(includeMira = true): SimulationSnapshot {
   };
   const committed = commitWorldEvent({
     tick: 0,
-    npcs: includeMira ? [mira, ellen] : [ellen],
+    npcs: [mira, ellen],
     events: []
   }, loss);
-  assert.equal(committed.ok, true);
-  if (!committed.ok) throw new Error(committed.error);
+  if (!committed.ok) {
+    assert.fail(committed.error);
+  }
   return committed.state;
 }
 
@@ -127,6 +128,9 @@ test("NPC autonomy selects only a personally justified action from an active goa
 
 test("an NPC cannot autonomously act on an event they have not learned about", () => {
   const state = createActiveSnapshot(false);
+  const mira = state.npcs.find((npc) => npc.id === "mira")!;
+  assert.equal(mira.knowledge.length, 0);
+  assert.equal(mira.goals.length, 0);
   assert.equal(evaluateNpcActions(state).length, 0);
 });
 
@@ -235,7 +239,12 @@ test("candidate ordering is stable when utility scores tie", () => {
   const zed = makeNpc({
     id: "zed",
     name: "제드",
-    goals: [{ id: "goal-z", tags: ["lost_property"], priority: 0.7, status: "active" }],
+    goals: [{
+      id: "goal-z",
+      tags: ["lost_property"],
+      priority: state.npcs.find((npc) => npc.id === "mira")!.goals[0]!.priority,
+      status: "active"
+    }],
     needs: [{ id: "security", value: 0.6 }],
     capabilities: [{ id: "search", proficiency: 0.85 }],
     knowledge: state.npcs.find((npc) => npc.id === "mira")!.knowledge.map((record) => ({ ...record })),
