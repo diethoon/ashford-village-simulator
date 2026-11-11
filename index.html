@@ -21,8 +21,8 @@
     <main>
       <section class="intro">
         <div class="eyebrow">A WORLD THAT REMEMBERS</div>
-        <h1>마을은 계속 살아가고,<br><em>사람마다 다른 이야기를 기억합니다.</em></h1>
-        <p>누가 사건을 겪었는지, 무엇을 전해 들었는지, 무엇을 중요하게 여기는지에 따라 각자의 목표와 감정, 대화가 달라집니다.</p>
+        <h1>애쉬포드 <em>살아 있는 마을</em></h1>
+        <p>주민은 각자의 경험과 기억, 필요에 따라 스스로 움직입니다.</p>
       </section>
 
       <section class="world-controls panel">
@@ -30,11 +30,15 @@
           <div><span class="eyebrow">WORLD EVENTS</span><h2>여관에서 일어난 일</h2></div>
           <span class="world-clock" id="world-clock">TICK 000</span>
         </div>
-        <div class="event-buttons">
-          <button class="primary-button" id="event-lost">가방 분실 사건 발생</button>
-          <button class="secondary-button" id="event-rumor" disabled>엘렌이 브램에게 소문 전달</button>
-          <button class="secondary-button" id="event-recovered" disabled>미라가 가방을 되찾음</button>
-        </div>
+        <details class="event-tools">
+          <summary>세계 사건 실험 도구 <span>테스트 이벤트 열기</span></summary>
+          <div class="event-buttons">
+            <button class="primary-button" id="event-lost">가방 분실 사건 발생</button>
+            <button class="secondary-button" id="event-rumor" disabled>엘렌이 브램에게 소문 전달</button>
+            <button class="secondary-button" id="event-recovered" disabled>미라가 가방을 되찾음</button>
+          </div>
+          <p class="control-hint" id="event-hint" role="status">사건을 발생시키면 직접 경험자와 목격자에게만 정보가 전달됩니다.</p>
+        </details>
         <div class="autonomy-strip" aria-label="주민 자율 행동">
           <div class="autonomy-copy">
             <span class="eyebrow">NPC AUTONOMY · UTILITY DECISION</span>
@@ -42,7 +46,6 @@
           </div>
           <button class="secondary-button autonomy-button" id="autonomy-step" disabled>실행 가능한 자율 행동 없음</button>
         </div>
-        <p class="control-hint" id="event-hint" role="status">사건을 발생시키면 직접 경험자와 목격자에게만 정보가 전달됩니다.</p>
       </section>
 
       <section class="bento-overview" aria-label="마을의 주요 변화">
@@ -55,8 +58,11 @@
             <div class="focus-copy">
               <strong id="focus-person">지금은 새롭게 도움을 청하는 주민이 없습니다.</strong>
               <p class="focus-goal" id="focus-goal">마을은 현재 기록된 문제 없이 평온합니다.</p>
-              <p class="focus-reason" id="focus-reason">새 사건이 발생하거나 주민이 정보를 얻으면 이곳에 가장 중요한 변화가 먼저 표시됩니다.</p>
-              <small class="focus-source" id="focus-source">개인 지식과 사건 기록을 확인합니다.</small>
+              <details class="evidence-disclosure">
+                <summary>판단 근거 보기</summary>
+                <p class="focus-reason" id="focus-reason">새 사건이 발생하거나 주민이 정보를 얻으면 이곳에 가장 중요한 변화가 먼저 표시됩니다.</p>
+                <small class="focus-source" id="focus-source">개인 지식과 사건 기록을 확인합니다.</small>
+              </details>
             </div>
             <button class="primary-button focus-action" id="focus-action" disabled>현재 들을 요청 없음</button>
           </div>
@@ -100,12 +106,15 @@
             <div class="mood-chip" id="mood-chip">평온</div>
           </div>
 
-          <div class="context-grid">
-            <div class="context-card"><span>현재 감정</span><strong id="emotion-state">특별한 감정 없음</strong><small id="emotion-cause">감정의 원인 사건 없음</small></div>
-            <div class="context-card"><span>개인 지식</span><strong id="knowledge-count">0건</strong><small id="knowledge-source">전달받은 정보 없음</small></div>
-            <div class="context-card"><span>고유 보이스</span><strong id="voice-style">정중하고 신중함</strong><small id="voice-identity">개인별 언어 습관</small></div>
-            <div class="context-card"><span>현재 목표</span><strong id="goal-state">진행 중인 목표 없음</strong><small id="goal-detail">개인 목표와 세계 사건의 연결</small></div>
-          </div>
+          <details class="context-disclosure">
+            <summary>감정 · 지식 · 성격 · 목표 상세</summary>
+            <div class="context-grid">
+              <div class="context-card"><span>현재 감정</span><strong id="emotion-state">특별한 감정 없음</strong><small id="emotion-cause">감정의 원인 사건 없음</small></div>
+              <div class="context-card"><span>개인 지식</span><strong id="knowledge-count">0건</strong><small id="knowledge-source">전달받은 정보 없음</small></div>
+              <div class="context-card"><span>고유 보이스</span><strong id="voice-style">정중하고 신중함</strong><small id="voice-identity">개인별 언어 습관</small></div>
+              <div class="context-card"><span>현재 목표</span><strong id="goal-state">진행 중인 목표 없음</strong><small id="goal-detail">개인 목표와 세계 사건의 연결</small></div>
+            </div>
+          </details>
 
           <div class="conversation-actions">
             <button class="talk-button" id="talk-greet">인사하기</button>
@@ -122,17 +131,17 @@
             </details>
           </div>
 
-          <div class="knowledge-panel">
-            <div class="subheading"><span class="eyebrow">WHAT THIS PERSON KNOWS</span><span id="knowledge-status">개인 지식 기록</span></div>
+          <details class="knowledge-panel">
+            <summary><span class="eyebrow">WHAT THIS PERSON KNOWS</span><span id="knowledge-status">개인 지식 기록</span></summary>
             <div id="knowledge-list" class="knowledge-list"><span class="empty-note">아직 기록된 사건이 없습니다.</span></div>
-          </div>
+          </details>
         </section>
       </div>
 
-      <section class="timeline-panel panel">
-        <div class="panel-heading"><div><span class="eyebrow">CAUSAL HISTORY</span><h2>세계 사건 기록</h2></div><span class="count" id="event-count">00</span></div>
+      <details class="timeline-panel panel">
+        <summary class="panel-heading timeline-summary"><div><span class="eyebrow">CAUSAL HISTORY</span><h2>세계 사건 기록</h2></div><span class="count" id="event-count">00</span></summary>
         <ol id="event-list" class="event-list"><li class="empty-note">아직 사건이 발생하지 않았습니다.</li></ol>
-      </section>
+      </details>
 
       <footer class="page-footer">
         <span>ASHFORD / SYSTEM PROTOTYPE</span>
