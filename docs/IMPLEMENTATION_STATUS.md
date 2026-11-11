@@ -31,24 +31,37 @@
 - [x] Mobile-first UI adds a world-pulse focus card, bento goal/evidence cards, provenance confidence display, horizontally scrollable resident cards, and expandable dialogue traces.
 - [x] CSS includes narrow-phone breakpoints, 44px minimum controls, safe-area padding, keyboard focus styles, and reduced-motion support.
 
+### NPC agency and utility-action loop
+- [x] Per-NPC action candidates require valid goal state, personal event knowledge/provenance, need thresholds, capabilities, resources, and cooldown.
+- [x] Candidate utility is calculated deterministically and ties use stable NPC/rule identifiers.
+- [x] The selected action executes as one event through the atomic world-event pipeline.
+- [x] Resource costs, need changes, goal transitions, event resolution, and awareness updates commit together or are rejected without partial state changes.
+- [x] Mira can find her satchel without a player recovery command when her personal goal, direct knowledge, security need, and search skill allow it.
+- [x] Ellen's linked help goal completes only because she witnesses Mira's recovery; uninformed NPCs cannot use the event as action evidence.
+- [x] Bram can take a fatigue-reducing rest action without a quest.
+- [x] The browser UI previews the best eligible action with decision reasons and an explicit one-step execution control; the explanation stacks above a full-width mobile action button.
+
 ### Build and automated verification
 - [x] Strict TypeScript type-check.
 - [x] Automated world/dialogue regression suite.
 - [x] Browser bundle build using esbuild.
-- [x] GitHub Actions runs all three checks on repository changes.
+- [x] GitHub Actions runs all three checks on pull requests and main branch changes.
 
-Latest verified run:
-- Commit: `c27bb0bb087a282b9104dbc66b977ee274abd0c6`
+Latest verified implementation run:
+- Feature branch: `feature/npc-autonomy-v1`
+- Verified code commit: `9d642b73b18fecf7a1b3b9bf7f3916eda01397d9`
 - Type-check: passed.
-- Tests: 22 passed, 0 failed.
+- Tests: 29 passed, 0 failed.
 - Browser build: passed.
-- Run: https://github.com/diethoon/ashford-village-simulator/actions/runs/42910920108
+- Run: https://github.com/diethoon/ashford-village-simulator/actions/runs/42952993550
+- Review: https://github.com/diethoon/ashford-village-simulator/pull/1
+- This agency implementation is on a review branch and has not yet been merged into `main`.
 
 ## Still not complete
 
 - The earlier standalone prototype's original source, save data, and regression suite have not yet been imported into this canonical repository. The current browser vertical slice is a new, self-contained implementation of the world-dialogue behavior, not proof that the previous prototype has been merged.
 - The current simulation contains four authored inn residents and a deliberately narrow set of event/goal rules. This is not yet the approximately 100-person autonomous village.
-- The first goal-emergence slice is now rule-driven from each NPC's personal knowledge, rather than requiring explicit activation goal deltas. It is not a full autonomous planner: continuous needs/utility evaluation, capability and schedule constraints, self-resolution attempts, delegation decisions, and multi-agent quest competition remain future systems.
+- The first utility-action loop is implemented and CI-verified in PR #1. It is a bounded vertical slice, not a full autonomous planner: continuous need generation/decay, time-of-day schedules, geographic reachability, NPC-to-NPC delegation, contested resource reservation, multi-step planning/retries, and multi-agent quest competition remain future systems.
 - Save/load persistence for the new core's personal knowledge, goal state, event provenance, memories, emotion causes, and dialogue history is not yet connected.
 - The browser shell is a static TypeScript application, not yet the final React/PWA/Capacitor architecture. The new responsive layout has not yet passed real-device/browser E2E review.
 - Actual browser interaction/e2e automation has not yet been performed. CI proves type-check, unit/integration tests, and bundle creation, not visual/browser acceptance.
@@ -58,9 +71,8 @@ Latest verified run:
 
 ## Immediate next engineering sequence
 
-1. Verify the interactive browser slice in a real browser and address visual/runtime issues.
-2. Connect the new core to the existing inn/world prototype without importing superseded generic-menu, omniscient-rumor, or fixed-quest-spawn behavior.
-3. Persist goals, knowledge, emotions, memories, relationships, and event provenance through versioned save/load.
-4. Replace demo-only event buttons with validated contextual actions that consume simulation time and resources.
-5. Add NPC autonomous goal evaluation so they can attempt self-resolution, request help only when appropriate, and progress/abandon goals without player input.
-6. Expand the inn to a multi-day social/economic simulation before increasing the population.
+1. Verify the PR browser slice with actual browser automation at 320px, 375px, 430px, tablet, and desktop widths; confirm the autonomous action preview and resulting dialogue/evidence updates.
+2. Connect the core to the prior inn/world prototype without reviving superseded generic menus, omniscient rumors, or fixed quest spawning.
+3. Add versioned local save/load for canonical world state, goals, needs, capabilities, knowledge, emotions, relationships, and event provenance.
+4. Expand utility decisions with schedules, location reachability, reservations, delegation, and safe multi-step action planning.
+5. Run a multi-day inn simulation with deterministic replay before scaling population beyond the four-resident slice.

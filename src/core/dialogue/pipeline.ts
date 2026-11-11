@@ -16,8 +16,9 @@ function isValidGoalTransition(from: string, to: string): boolean {
 
 function eventReferencesExist(npcs: NpcState[], event: WorldEvent): boolean {
   const ids = new Set(npcs.map((npc) => npc.id));
+  // actorIds can include non-NPC actors (for example, the player).
+  // NPC references used for knowledge projection and deltas are validated here.
   const eventParticipants = [
-    ...event.actorIds,
     ...event.affectedNpcIds,
     ...event.witnessNpcIds,
     ...event.publicNoticeNpcIds

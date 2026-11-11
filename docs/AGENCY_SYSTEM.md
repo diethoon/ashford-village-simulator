@@ -24,7 +24,7 @@ Supported action kinds:
 - `self_resolve`: an NPC attempts to complete one of their own active/delegated goals;
 - `maintain_need`: an NPC takes a routine action to reduce an unmet need, without requiring a quest.
 
-Rules are per-resident data. They do not grant omniscient access to world events.
+Rules are per-resident data. They do not grant omniscient access to world events. Invalid numerical thresholds, reversed resource ranges, non-finite effects, and malformed IDs make a rule ineligible before scoring.
 
 ## 3. Knowledge and evidence guards
 
@@ -57,7 +57,7 @@ One autonomy step executes exactly one best candidate:
 5. Include the originating event IDs when the action resolves its goal's cause.
 6. Pass the event to `commitWorldEvent`.
 
-The pipeline validates all references and ranges before committing any change. Invalid outcomes leave the original snapshot untouched. Only after the commit do affected/witness NPCs receive personal knowledge of the new event.
+The pipeline validates all references and ranges before committing any change. An invalid need change, goal transition, or resource payment rejects the complete event, preserving the original snapshot. Invalid outcomes leave the original snapshot untouched. Only after the commit do affected/witness NPCs receive personal knowledge of the new event.
 
 ## 6. Current vertical slice
 

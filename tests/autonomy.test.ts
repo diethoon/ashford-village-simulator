@@ -49,6 +49,7 @@ function searchRule(overrides: Partial<NpcActionRule> = {}): NpcActionRule {
       resolvesGoalOriginEvents: true,
       witnessNpcIds: ["ellen"],
       additionalGoalDeltas: [{ npcId: "ellen", goalId: "help_guest", status: "completed" }],
+      resourceCosts: { rope: 1 },
       needDeltas: [{ npcId: "mira", needId: "security", delta: -0.6 }]
     },
     ...overrides
@@ -73,6 +74,7 @@ function createActiveSnapshot(includeMira = true): SimulationSnapshot {
     goals: [],
     needs: [{ id: "security", value: 0.6 }],
     capabilities: [{ id: "search", proficiency: 0.85 }],
+    resources: { rope: 2 },
     actionRules: [searchRule()]
   });
   const ellen = makeNpc({
@@ -175,6 +177,7 @@ test("a successful autonomous action commits the outcome, resolves its cause and
   assert.equal(mira.goals.find((goal) => goal.id === "recover_satchel")?.status, "completed");
   assert.equal(ellen.goals.find((goal) => goal.id === "help_guest")?.status, "completed");
   assert.equal(mira.needs?.find((need) => need.id === "security")?.value, 0);
+  assert.equal(mira.resources.rope, 1);
   assert.ok(mira.knowledge.some((record) => record.eventId === result.event.id));
   assert.ok(ellen.knowledge.some((record) => record.eventId === result.event.id && record.channel === "direct_observation"));
   assert.equal(selectNpcAction(result.state), null);
@@ -254,4 +257,46 @@ test("candidate ordering is stable when utility scores tie", () => {
   const ordered = evaluateNpcActions(withTie);
   assert.deepEqual(ordered.map((item) => item.npcId), ["mira", "zed"]);
   assert.deepEqual(evaluateNpcActions(withTie).map((item) => item.ruleId), ordered.map((item) => item.ruleId));
+});
+
+
+test("malformed action thresholds and resource ranges are excluded before selection", () => {
+  const state = createActiveSnapshot();
+  const invalidRules = [
+    searchRule({ requiredNeeds: [{ needId: "security", minValue: 1.2 }] }),
+    searchRule({ requiredCapabilities: [{ capabilityId: "search", minProficiency: -0.1 }] }),
+    searchRule({ requiredResources: [{ resourceId: "rope", min: 3, max: 1 }] }),
+    searchRule({ minimumKnowledgeConfidence: Number.NaN })
+  ];
+  for (const rule of invalidRules) {
+    const candidateState: SimulationSnapshot = {
+      ...state,
+      npcs: state.npcs.map((npc) => npc.id === "mira"
+        ? { ...npc, actionRules: [rule] }
+        : npc)
+    };
+    assert.equal(selectNpcAction(candidateState), null);
+  }
+});
+
+test("an out-of-range need outcome rejects the autonomous action atomically", () => {
+  const state = createActiveSnapshot();
+  const invalid: SimulationSnapshot = {
+    ...state,
+    npcs: state.npcs.map((npc) => npc.id === "mira"
+      ? { ...npc, actionRules: [searchRule({
+        result: {
+          ...searchRule().result,
+          needDeltas: [{ npcId: "mira", needId: "security", delta: -1.2 }]
+        }
+      })] }
+      : npc)
+  };
+  const result = runNpcAutonomyStep(invalid);
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.equal(result.state, invalid);
+  assert.equal(result.state.npcs.find((npc) => npc.id === "mira")?.goals[0]?.status, "active");
+  assert.equal(result.state.npcs.find((npc) => npc.id === "mira")?.resources.rope, 2);
+  assert.equal(result.state.events.length, 1);
 });

@@ -61,12 +61,44 @@ function validRule(rule: NpcActionRule): boolean {
   if (rule.cooldownTicks !== undefined &&
       (!Number.isInteger(rule.cooldownTicks) || rule.cooldownTicks < 0)) return false;
   if (!rule.result.eventType.trim() || !rule.result.summary.trim() ||
-      rule.result.tags.length === 0 || !isNormalized(rule.result.severity)) return false;
-  if (rule.kind === "self_resolve" && !rule.goalId) return false;
+      rule.result.tags.length === 0 || rule.result.tags.some((tag) => !tag.trim()) ||
+      !isNormalized(rule.result.severity)) return false;
+  if (rule.kind === "self_resolve" && !rule.goalId?.trim()) return false;
+  if (rule.goalId !== undefined && !rule.goalId.trim()) return false;
   if (rule.kind === "maintain_need" && (!rule.requiredNeeds || rule.requiredNeeds.length === 0)) return false;
+  if (rule.requiredKnowledgeTags?.some((tag) => !tag.trim())) return false;
+  if (rule.minimumKnowledgeConfidence !== undefined &&
+      !isNormalized(rule.minimumKnowledgeConfidence)) return false;
+  if ((rule.requiredNeeds ?? []).some((item) =>
+    !item.needId.trim() ||
+    (item.minValue !== undefined && !isNormalized(item.minValue))
+  )) return false;
+  if ((rule.requiredCapabilities ?? []).some((item) =>
+    !item.capabilityId.trim() ||
+    (item.minProficiency !== undefined && !isNormalized(item.minProficiency))
+  )) return false;
+  if ((rule.requiredResources ?? []).some((item) =>
+    !item.resourceId.trim() ||
+    (item.min !== undefined && (!Number.isFinite(item.min) || item.min < 0)) ||
+    (item.max !== undefined && (!Number.isFinite(item.max) || item.max < 0)) ||
+    (item.min !== undefined && item.max !== undefined && item.min > item.max)
+  )) return false;
   if (rule.goalPriorityWeight !== undefined && !isNormalized(rule.goalPriorityWeight)) return false;
-  if (Object.values(rule.needWeights ?? {}).some((weight) => !isNormalized(weight))) return false;
-  if (Object.values(rule.resourceCosts ?? {}).some((cost) => !Number.isFinite(cost) || cost < 0)) return false;
+  if (Object.entries(rule.needWeights ?? {}).some(([needId, weight]) =>
+    !needId.trim() || !isNormalized(weight)
+  )) return false;
+  if (Object.entries(rule.resourceCosts ?? {}).some(([resourceId, cost]) =>
+    !resourceId.trim() || !Number.isFinite(cost) || cost < 0
+  )) return false;
+  if ((rule.result.resourceDeltas ?? []).some((change) =>
+    !change.npcId.trim() || !change.resourceId.trim() || !Number.isFinite(change.delta)
+  )) return false;
+  if ((rule.result.needDeltas ?? []).some((change) =>
+    !change.npcId.trim() || !change.needId.trim() || !Number.isFinite(change.delta)
+  )) return false;
+  if ((rule.result.additionalGoalDeltas ?? []).some((change) =>
+    !change.npcId.trim() || !change.goalId.trim()
+  )) return false;
   return true;
 }
 
@@ -163,15 +195,20 @@ function evaluateRule(
     state.tick - event.tick < rule.cooldownTicks!
   )) return null;
 
+  if (Object.keys(rule.needWeights ?? {}).some((needId) =>
+    !needs.some((need) => need.id === needId && isNormalized(need.value))
+  )) return null;
+
   const needContributions = Object.entries(rule.needWeights ?? {})
     .map(([needId, weight]) => {
       const need = needs.find((item) => item.id === needId);
-      return need ? {
+      if (!need || !isNormalized(need.value)) return null;
+      return {
         needId,
         value: need.value,
         weight,
         contribution: need.value * weight
-      } : null;
+      };
     })
     .filter((value): value is AutonomyNeedContribution => value !== null)
     .sort((a, b) => a.needId.localeCompare(b.needId));
